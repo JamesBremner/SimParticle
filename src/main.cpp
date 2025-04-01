@@ -269,7 +269,7 @@ cGUI::cGUI()
           "Particle Simulator",
           {50, 50, 1000, 800})
 {
-    theGrid.resize(500, std::vector<particle *>(2000));
+    theGrid.resize(500, std::vector<particle *>(500));
 
     fm.events().draw(
         [&](PAINTSTRUCT &ps)
@@ -343,6 +343,12 @@ void cGUI::move()
 
 main()
 {
+    // run the unit tests
+    if( ! particle::test() ) {
+        std::cout << "unit test failed\n";
+        exit(1);
+    }
+
     cGUI theGUI;
     return 0;
 }

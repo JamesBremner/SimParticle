@@ -1,3 +1,5 @@
+#include <wex.h>
+
 //////////////////////////////////////
 // virtual base class for all particles
 class particle
@@ -25,6 +27,8 @@ public:
     virtual std::string text() const;
 
     void draw(wex::shapes &S) const;
+
+    static bool test();
 
 protected:
     int myColor;
