@@ -1,3 +1,4 @@
+//////////////////////////////////////
 // virtual base class for all particles
 class particle
 {
@@ -15,7 +16,8 @@ public:
         const wex::sMouse &m,
         int keyDown);
 
-    void set_at_rest( bool f = true );
+    void setAtRest( bool f = true );
+    bool isAtRest() const;
 
     int color() const;
     std::pair<int, int> location() const;
@@ -29,9 +31,10 @@ protected:
     std::pair<int, int> myLocation;
     bool fAtRest;       // true if particle is blocked
 
-    void free_grains_above(const std::pair<int,int>& location);
+    void freeGrainsAbove(const std::pair<int,int>& location);
 };
 
+//////////////////////////////////////
 // A grain of sand
 class grain : public particle
 {
@@ -40,7 +43,7 @@ public:
     virtual void move();
     virtual std::string text() const;
 };
-
+//////////////////////////////////////
 // A drop of water
 class water : public particle
 {
@@ -49,7 +52,7 @@ public:
     virtual void move();
     virtual std::string text() const;
 };
-
+//////////////////////////////////////
 // A stone
 class stone : public particle
 {
