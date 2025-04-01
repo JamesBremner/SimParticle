@@ -10,103 +10,233 @@
 // virtual base class for all particles
 class particle
 {
-    public:
+public:
     particle();
-    particle( int color );
+    particle(int color, int x, int y);
 
     // Each particle moves in a different way
     // This method cannot be compiled
     // but allows the correct method to run for the specialized particles
     virtual void move() = 0;
-    
-    int color() const;
 
-    protected:
+    // Construct particle of required type
+    static particle *factory(
+        const wex::sMouse &m,
+        int keyDown);
+
+    int color() const;
+    std::pair<int, int> location() const;
+
+    virtual std::string text() const;
+
+    void draw(wex::shapes &S) const;
+
+protected:
     int myColor;
-    std::pair<int,int> myLocation;
+    std::pair<int, int> myLocation;
 };
 
 // A grain of sand
 class grain : public particle
 {
 public:
-    grain();
+    grain(int x, int y);
     virtual void move();
+    virtual std::string text() const;
 };
 
 // A drop of water
 class water : public particle
 {
 public:
-    water();
+    water(int x, int y);
     virtual void move();
+    virtual std::string text() const;
 };
 
 // A stone
 class stone : public particle
 {
 public:
-    stone();
+    stone(int x, int y);
     virtual void move();
+    virtual std::string text() const;
 };
 
 particle::particle()
-: myColor( 0x0000FF )
-{}
-particle::particle(int color)
-: myColor( color )
-{}
+    : myColor(0x0000FF)
+{
+}
+particle::particle(int color, int x, int y)
+    : myColor(color),
+      myLocation(std::make_pair(x, y))
+{
+}
+particle *particle::factory(
+    const wex::sMouse &m,
+    int keydown)
+{
+    // particle generated only if left mouse button down
+    if (!m.left)
+        return NULL;
+
+    std::cout << "keydown " << keydown << "\n";
+
+    // grid location of mouse cursor
+    int ix = m.x / 100;
+    int iy = m.y / 100;
+
+    // particle type selected by key last pressed
+    switch (keydown)
+    {
+
+    case 71:
+        return new grain(ix, iy);
+
+    case 83:
+        return new stone(ix, iy);
+
+    case 87:
+        return new water(ix, iy);
+
+    default:
+        return NULL;
+    }
+}
 
 int particle::color() const
 {
     return myColor;
 }
+std::pair<int, int> particle::location() const
+{
+    return myLocation;
+}
+std::string particle::text() const
+{
+    std::stringstream ss;
+    ss << myLocation.first << " " << myLocation.second << ", ";
+    return ss.str();
+}
 
-grain::grain()
-: particle( 0x00FFFF)
-{}
+void particle::draw(wex::shapes &S) const
+{
+    S.color(myColor);
+    S.rectangle({myLocation.first, myLocation.second,
+                 2, 2});
+}
+
+grain::grain(int x, int y)
+    : particle(0x00FFFF, x, y)
+{
+    myLocation = std::make_pair(x, y);
+}
 void grain::move()
 {
     myLocation.second++;
 }
+std::string grain::text() const
+{
+    std::string ret(" grain ");
+    return ret + particle::text();
+}
 
-water::water()
-: particle(0xFF0000)
-{ }
+water::water(int x, int y)
+    : particle(0xFF0000, x, y)
+{
+}
 void water::move()
 {
     myLocation.first++;
 }
+std::string water::text() const
+{
+    std::string ret(" water ");
+    return ret + particle::text();
+}
 
-stone::stone()
-: particle(0x000000)
+stone::stone(int x, int y)
+    : particle(0x000000, x, y)
 {
 }
 void stone::move()
 {
     myLocation.first--;
 }
-
+std::string stone::text() const
+{
+    std::string ret(" stone ");
+    return ret + particle::text();
+}
 
 class cGUI : public cStarterGUI
 {
 public:
     cGUI()
         : cStarterGUI(
-              "Starter",
-              {50, 50, 1000, 500}),
-          lb(wex::maker::make < wex::label >(fm))
+              "Particle Simulator",
+              {50, 50, 1000, 500})
     {
-        lb.move(50, 50, 100, 30);
-        lb.text("Hello World");
+        myGrid.resize(100, std::vector<particle *>(100));
+
+        fm.events().draw(
+            [&](PAINTSTRUCT &ps)
+            {
+                wex::shapes S(ps);
+                draw(S);
+                // fm.update();
+            });
+
+        myUpdateTimer = new wex::timer(fm, 500);
+        fm.events().timer(
+            [this](int id)
+            {
+                std::cout << " timer ";
+                auto *p = particle::factory(fm.getMouseStatus(), myKeyDown);
+                if (p)
+                {
+                    auto loc = p->location();
+                    myGrid[loc.first][loc.second] = p;
+                }
+
+                fm.update();
+            });
+
+        fm.events().keydown(
+            [this](int keyCode)
+            {
+                myKeyDown = keyCode;
+            });
 
         show();
         run();
     }
 
 private:
-    wex::label &lb;
+    std::vector<std::vector<particle *>> myGrid;
+
+    wex::timer *myUpdateTimer;
+
+    int myKeyDown;
+
+    void draw(wex::shapes &S);
 };
+
+void cGUI::draw(wex::shapes &S)
+{
+    for (auto &row : myGrid)
+    {
+        for (particle *p : row)
+        {
+            if (p)
+            {
+                std::cout << p->text();
+                p->draw(S);
+            }
+        }
+    }
+    std::cout << "\n";
+}
 
 main()
 {
