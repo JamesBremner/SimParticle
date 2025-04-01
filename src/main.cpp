@@ -6,62 +6,25 @@
 #include <algorithm>
 #include <wex.h>
 #include "cStarterGUI.h"
+#include "SimParticle.h"
 
-// virtual base class for all particles
-class particle
+class cGUI : public cStarterGUI
 {
 public:
-    particle();
-    particle(int color, int x, int y);
+    cGUI();
+    
+private:
 
-    // Each particle moves in a different way
-    // This method cannot be compiled
-    // but allows the correct method to run for the specialized particles
-    virtual void move() = 0;
+    wex::timer *myUpdateTimer;
 
-    // Construct particle of required type
-    static particle *factory(
-        const wex::sMouse &m,
-        int keyDown);
+    int myKeyDown;
 
-    int color() const;
-    std::pair<int, int> location() const;
-
-    virtual std::string text() const;
-
-    void draw(wex::shapes &S) const;
-
-protected:
-    int myColor;
-    std::pair<int, int> myLocation;
+    void draw(wex::shapes &S);
+    void move();
 };
 
-// A grain of sand
-class grain : public particle
-{
-public:
-    grain(int x, int y);
-    virtual void move();
-    virtual std::string text() const;
-};
-
-// A drop of water
-class water : public particle
-{
-public:
-    water(int x, int y);
-    virtual void move();
-    virtual std::string text() const;
-};
-
-// A stone
-class stone : public particle
-{
-public:
-    stone(int x, int y);
-    virtual void move();
-    virtual std::string text() const;
-};
+// store the particles in their grid locations
+std::vector<std::vector<particle *>> theGrid;
 
 particle::particle()
     : myColor(0x0000FF)
@@ -101,6 +64,39 @@ particle *particle::factory(
 
     default:
         return NULL;
+    }
+}
+
+void particle::set_at_rest( bool f )
+{
+    fAtRest = f;
+}
+
+void particle::free_grains_above(const std::pair<int,int>& location)
+ {
+    // free grains that may have been blocked;
+
+    // check if grain is on window bottom - always blocked
+    if (location.second - 1 < 0) { return; }
+
+    // ensure grain above, if present, is free
+    auto n = theGrid[location.second - 1][location.first];
+    if (n != nullptr)
+        n->set_at_rest(false);
+
+    // ensure grain above left, if present, is free
+    if (location.first - 1 >= 0) {
+        n = theGrid[location.second - 1][location.first - 1];
+        if (n != nullptr)
+            n->set_at_rest(false);
+    }
+
+    // ensure grain above right, if present, is free
+    // check for right boundary ( fix TID20 )
+    if (location.first + 1 < theGrid[0].size()) {
+        n = theGrid[location.second - 1][location.first + 1];
+        if (n != nullptr)
+            n->set_at_rest(false);
     }
 }
 
@@ -170,87 +166,72 @@ std::string stone::text() const
     return ret + particle::text();
 }
 
-class cGUI : public cStarterGUI
+
+
+cGUI::cGUI()
+: cStarterGUI(
+      "Particle Simulator",
+      {50, 50, 1000, 500})
 {
-public:
-    cGUI()
-        : cStarterGUI(
-              "Particle Simulator",
-              {50, 50, 1000, 500})
+    theGrid.resize(500, std::vector<particle *>(500));
+
+fm.events().draw(
+    [&](PAINTSTRUCT &ps)
     {
-        myGrid.resize(500, std::vector<particle *>(500));
+        wex::shapes S(ps);
+        draw(S);
+        // fm.update();
+    });
 
-        fm.events().draw(
-            [&](PAINTSTRUCT &ps)
-            {
-                wex::shapes S(ps);
-                draw(S);
-                // fm.update();
-            });
+myUpdateTimer = new wex::timer(fm, 50);
+fm.events().timer(
+    [this](int id)
+    {
+        auto *p = particle::factory(fm.getMouseStatus(), myKeyDown);
+        if (p)
+        {
+            auto loc = p->location();
+            theGrid[loc.first][loc.second] = p;
+        }
 
-        myUpdateTimer = new wex::timer(fm, 50);
-        fm.events().timer(
-            [this](int id)
-            {
-                auto *p = particle::factory(fm.getMouseStatus(), myKeyDown);
-                if (p)
-                {
-                    auto loc = p->location();
-                    myGrid[loc.first][loc.second] = p;
-                }
+        move();
 
-                move();
+        fm.update();
+    });
 
-                fm.update();
-            });
+fm.events().keydown(
+    [this](int keyCode)
+    {
+        myKeyDown = keyCode;
+    });
 
-        fm.events().keydown(
-            [this](int keyCode)
-            {
-                myKeyDown = keyCode;
-            });
+show();
+run();
+}
 
-        show();
-        run();
-    }
-
-private:
-    std::vector<std::vector<particle *>> myGrid;
-
-    wex::timer *myUpdateTimer;
-
-    int myKeyDown;
-
-    void draw(wex::shapes &S);
-    void move();
-};
 
 void cGUI::draw(wex::shapes &S)
 {
     // loop over grid
-    for (auto &row : myGrid)
-    {
+    for (auto &row : theGrid)
         for (particle *p : row)
         {
             // if particle present, draw it
             if (p)
                 p->draw(S);
         }
-    }
 }
 
 void cGUI::move()
 {
-    for (auto &row : myGrid)
-    {
+    // loop over grid
+    for (auto &row : theGrid)
         for (particle *p : row)
         {
+            // if particle present, draw it
             if (p)
-            {
                 p->move();
-            }
         }
-    }
 }
 
 main()
