@@ -83,8 +83,8 @@ particle *particle::factory(
     std::cout << "keydown " << keydown << "\n";
 
     // grid location of mouse cursor
-    int ix = m.x / 100;
-    int iy = m.y / 100;
+    int ix = m.x / 5;
+    int iy = m.y / 5;
 
     // particle type selected by key last pressed
     switch (keydown)
@@ -122,8 +122,9 @@ std::string particle::text() const
 void particle::draw(wex::shapes &S) const
 {
     S.color(myColor);
+    S.fill();
     S.rectangle({myLocation.first, myLocation.second,
-                 2, 2});
+                 10, 10});
 }
 
 grain::grain(int x, int y)
@@ -177,7 +178,7 @@ public:
               "Particle Simulator",
               {50, 50, 1000, 500})
     {
-        myGrid.resize(100, std::vector<particle *>(100));
+        myGrid.resize(500, std::vector<particle *>(500));
 
         fm.events().draw(
             [&](PAINTSTRUCT &ps)
@@ -187,17 +188,18 @@ public:
                 // fm.update();
             });
 
-        myUpdateTimer = new wex::timer(fm, 500);
+        myUpdateTimer = new wex::timer(fm, 50);
         fm.events().timer(
             [this](int id)
             {
-                std::cout << " timer ";
                 auto *p = particle::factory(fm.getMouseStatus(), myKeyDown);
                 if (p)
                 {
                     auto loc = p->location();
                     myGrid[loc.first][loc.second] = p;
                 }
+
+                move();
 
                 fm.update();
             });
@@ -220,9 +222,24 @@ private:
     int myKeyDown;
 
     void draw(wex::shapes &S);
+    void move();
 };
 
 void cGUI::draw(wex::shapes &S)
+{
+    // loop over grid
+    for (auto &row : myGrid)
+    {
+        for (particle *p : row)
+        {
+            // if particle present, draw it
+            if (p)
+                p->draw(S);
+        }
+    }
+}
+
+void cGUI::move()
 {
     for (auto &row : myGrid)
     {
@@ -230,12 +247,10 @@ void cGUI::draw(wex::shapes &S)
         {
             if (p)
             {
-                std::cout << p->text();
-                p->draw(S);
+                p->move();
             }
         }
     }
-    std::cout << "\n";
 }
 
 main()
