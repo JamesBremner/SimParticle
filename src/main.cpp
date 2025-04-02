@@ -14,6 +14,7 @@
 // storage for particle static attributes
 grid_t particle::theGrid;
 double particle::myGrid2WindowScale;
+bool particle::myfMove;
 
 class cGUI : public cStarterGUI
 {
@@ -243,6 +244,9 @@ void grain::move()
         // free grains that may have been blocked;
         freeGrainsAbove(prevLocation);
 
+        // need a display update
+        myfMove = true;
+
         // std::cout << " moved " << text() << " ";
     }
     else
@@ -322,9 +326,11 @@ void cGUI::registerEventHandlers()
             particle::factory(fm.getMouseStatus(), myKeyDown);
 
             // update position of all particles free to move
-            particle::moveAll();
-
-            fm.update();
+            if (particle::moveAll())
+            {
+                // a particle moved
+                fm.update();
+            }
         });
 
     fm.events().keydown(
@@ -348,8 +354,10 @@ void particle::drawAll(wex::shapes &S)
         }
 }
 
-void particle::moveAll()
+bool particle::moveAll()
 {
+    myfMove = false;
+
     // loop over grid
     for (int krow = theGrid.size(); krow >= 0; krow--)
         for (particle *p : theGrid[krow])
@@ -358,6 +366,8 @@ void particle::moveAll()
             if (p)
                 p->move();
         }
+
+    return myfMove;
 }
 
 main()

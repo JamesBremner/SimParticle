@@ -22,8 +22,10 @@ public:
         int rowCount,
         int colCount    );
     static void drawAll(wex::shapes &S);
-    static void moveAll();
 
+    /// @brief Move all particles that are not blocked
+    /// @return true if any particle moved ( display need to update )
+    static bool moveAll();
 
     // Each particle moves in a different way
     // This method cannot be compiled
@@ -55,7 +57,11 @@ protected:
     int myColor;
     std::pair<int, int> myLocation;
     bool fAtRest;       // true if particle is blocked
+
+    // static attributes shared by all particles
+
     static double myGrid2WindowScale;
+    static bool myfMove;                // true if a particle moved
 
     // store the particles in their grid locations
     static grid_t theGrid;
