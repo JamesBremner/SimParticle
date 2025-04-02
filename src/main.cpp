@@ -22,11 +22,10 @@ public:
 
 private:
     wex::timer *myUpdateTimer;
-    wex::timer *myMoveTimer;
 
     int myKeyDown;
 
-    void constructTimers();
+    // void constructTimers();
     void registerEventHandlers();
 };
 
@@ -48,7 +47,7 @@ particle *particle::factory(
     if (!m.left)
         return NULL;
 
-    //std::cout << "keydown " << keydown << "\n";
+    // std::cout << "keydown " << keydown << "\n";
 
     // grid location of mouse cursor
     const double scale = (double)GRID_COL_COUNT / GRID_PXL_WIDTH;
@@ -58,7 +57,7 @@ particle *particle::factory(
     // check within bounds
     // note cannot use isOutGrid method because this method is static
     if (0 > ix || ix >= theGrid[0].size() ||
-            0 > iy || iy >= theGrid.size())
+        0 > iy || iy >= theGrid.size())
         return NULL;
 
     // check location is empty
@@ -140,13 +139,13 @@ void particle::freeGrainsAbove(const std::pair<int, int> &location)
         n->setAtRest(false);
 
     // ensure grain above left, if present, is free
-    n = get(LY - 1,LX - 1);
+    n = get(LY - 1, LX - 1);
     if (n != nullptr)
         n->setAtRest(false);
 
     // ensure grain above right, if present, is free
     // check for right boundary ( fix TID20 )
-    n = get(LY - 1,LX + 1);
+    n = get(LY - 1, LX + 1);
     if (n != nullptr)
         n->setAtRest(false);
 }
@@ -170,10 +169,10 @@ void particle::draw(wex::shapes &S) const
 {
     S.color(myColor);
     S.fill();
-    //std::cout << "draw " << LX <<" "<< LY <<" "<<myGrid2WindowScale << ", ";
+    // std::cout << "draw " << LX <<" "<< LY <<" "<<myGrid2WindowScale << ", ";
     S.rectangle(
         {(int)(LX * myGrid2WindowScale), (int)(LY * myGrid2WindowScale),
-                 3, 3});
+         3, 3});
 }
 
 grain::grain(int x, int y)
@@ -195,8 +194,8 @@ void grain::move()
         return;
 
     // check if grain is resting directly on the bottom
-    //std::cout << "move  "<< LY+1 <<" "<< GRID_ROW_COUNT << ", ";
-    if (LY >= GRID_ROW_COUNT - 1 )
+    // std::cout << "move  "<< LY+1 <<" "<< GRID_ROW_COUNT << ", ";
+    if (LY >= GRID_ROW_COUNT - 1)
     {
         setAtRest();
         return;
@@ -290,30 +289,17 @@ std::string stone::text() const
 cGUI::cGUI()
     : cStarterGUI(
           "Particle Simulator",
-          {50, 50, GRID_PXL_WIDTH, GRID_PXL_HEIGHT+50})
+          {50, 50, GRID_PXL_WIDTH, GRID_PXL_HEIGHT + 50})
 {
     particle::setGridSize(
         GRID_ROW_COUNT, GRID_COL_COUNT);
 
-    constructTimers();
+    myUpdateTimer = new wex::timer(fm, msStep, 1);
 
     registerEventHandlers();
 
     show();
     run();
-}
-
-void cGUI::constructTimers()
-{
-    /*
-    One updates the display with the latest particle position
-    Two moves the particle positions
-
-    Two timers are needed so that the windows message pump
-    will alternate particle moves and display updates
-    */
-    myUpdateTimer = new wex::timer(fm, msStep, 1);
-    myMoveTimer = new wex::timer(fm, msStep, 2);
 }
 
 void cGUI::registerEventHandlers()
@@ -328,24 +314,17 @@ void cGUI::registerEventHandlers()
     fm.events().timer(
         [this](int id)
         {
-            switch (id)
-            {
-            case 2:
-                // create new particle at mouse cursor position
-                // if left mouse button down and last key pressed was
-                // g for a grain of sand
-                // w for a drop of water
-                // s for a stone
-                particle::factory(fm.getMouseStatus(), myKeyDown);
+            // create new particle at mouse cursor position
+            // if left mouse button down and last key pressed was
+            // g for a grain of sand
+            // w for a drop of water
+            // s for a stone
+            particle::factory(fm.getMouseStatus(), myKeyDown);
 
-                // update position of all particles free to move
-                particle::moveAll();
-                break;
+            // update position of all particles free to move
+            particle::moveAll();
 
-            case 1:
-                fm.update();
-                break;
-            }
+            fm.update();
         });
 
     fm.events().keydown(
