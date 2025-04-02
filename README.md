@@ -3,7 +3,7 @@ The main goal is to have multiple types of particles on the screen at the same t
 
 Press the S key for stone, W key for Water and G for grain.
 
-Particles are created at the mouse cursor positio when the left mouse button is held down.  The particle type created is controlled by the last key pressed,: S, W, or G
+Particles are created at the mouse cursor position when the left mouse button is held down.  The particle type created is controlled by the last key pressed,: S, W, or G
 
 Sand grains will display yellow, water will be blue and stones will be black.
 
