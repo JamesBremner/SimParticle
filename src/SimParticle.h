@@ -1,5 +1,12 @@
 #include <wex.h>
 
+// "magic numbers"
+#define msStep 10 // update wall clock step milliseconds ( 10 = 100 fps )
+#define GRID_ROW_COUNT 400
+#define GRID_COL_COUNT 500
+#define GRID_PXL_WIDTH 1000
+#define GRID_PXL_HEIGHT 800
+
 class particle;
 typedef  std::vector<std::vector<particle *>> grid_t;
 
@@ -28,6 +35,9 @@ public:
         const wex::sMouse &m,
         int keyDown);
 
+    bool isOutGrid(int row, int col ) const;
+    particle* get(int row, int col ) const;
+
     void setAtRest( bool f = true );
     bool isAtRest() const;
 
@@ -36,6 +46,7 @@ public:
 
     virtual std::string text() const;
 
+    // draw this particle
     void draw(wex::shapes &S) const;
 
     static bool test();
@@ -44,6 +55,7 @@ protected:
     int myColor;
     std::pair<int, int> myLocation;
     bool fAtRest;       // true if particle is blocked
+    static double myGrid2WindowScale;
 
     // store the particles in their grid locations
     static grid_t theGrid;

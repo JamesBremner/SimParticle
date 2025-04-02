@@ -4,42 +4,43 @@
 
 bool particle::test()
 {
-    particle::setGridSize(10,10);
+    particle::setGridSize(
+        GRID_ROW_COUNT, GRID_COL_COUNT);
 
-    theGrid[9][1] = new grain(9, 1);
+    theGrid[GRID_ROW_COUNT-1][1] = new grain(GRID_ROW_COUNT-1, 1);
 
     moveAll();
 
-    if (!theGrid[9][1]->isAtRest())
+    if (!theGrid[GRID_ROW_COUNT-1][1]->isAtRest())
         return false;
 
-    theGrid[8][1] = new grain(8, 1);
+    theGrid[GRID_ROW_COUNT-2][1] = new grain(GRID_ROW_COUNT-2, 1);
     moveAll();
 
     // check that the particle moved right aside and down
     if (theGrid[8][1] != NULL)
         return false;
-    if (theGrid[9][2] == NULL)
+    if (theGrid[GRID_ROW_COUNT-1][2] == NULL)
         return false;
 
         moveAll();
-    if (theGrid[9][2] == NULL)
+    if (theGrid[GRID_ROW_COUNT-1][2] == NULL)
         return false;
 
-    theGrid[8][1] = new grain(8, 1);
+    theGrid[GRID_ROW_COUNT-2][1] = new grain(GRID_ROW_COUNT-2, 1);
     moveAll();
     moveAll();
     moveAll();
 
     // check that the particle moved left aside and down
-    if (!theGrid[9][0]->isAtRest())
+    if (!theGrid[GRID_ROW_COUNT-1][0]->isAtRest())
         return false;
 
-    theGrid[8][1] = new grain(8, 1);
+    theGrid[GRID_ROW_COUNT-2][1] = new grain(GRID_ROW_COUNT-2, 1);
     moveAll();
 
     // check that the particle is blocked
-    if (!theGrid[8][1]->isAtRest())
+    if (!theGrid[GRID_ROW_COUNT-2][1]->isAtRest())
         return false;
 
     theGrid.clear();

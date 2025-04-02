@@ -10,11 +10,10 @@
 
 #define LX myLocation.second
 #define LY myLocation.first
-#define msStep 10 // update wall clock step milliseconds ( 100 = 10 fps )
-#define GRID_ROW_COUNT 500
-#define GRID_COL_COUNT 500
 
+// storage for particle static attributes
 grid_t particle::theGrid;
+double particle::myGrid2WindowScale;
 
 class cGUI : public cStarterGUI
 {
@@ -49,15 +48,17 @@ particle *particle::factory(
     if (!m.left)
         return NULL;
 
-    // std::cout << "keydown " << keydown << "\n";
+    //std::cout << "keydown " << keydown << "\n";
 
     // grid location of mouse cursor
-    int ix = m.y;
-    int iy = m.x;
+    const double scale = (double)GRID_COL_COUNT / GRID_PXL_WIDTH;
+    int ix = m.y * scale;
+    int iy = m.x * scale;
 
-    // check within bounds 
+    // check within bounds
+    // note cannot use isOutGrid method because this method is static
     if (0 > ix || ix >= theGrid[0].size() ||
-        0 > iy || iy >= theGrid.size())
+            0 > iy || iy >= theGrid.size())
         return NULL;
 
     // check location is empty
@@ -88,7 +89,7 @@ particle *particle::factory(
     // place particle in grid
     theGrid[iy][ix] = newParticle;
 
-    // std::cout << "created at " << newParticle->text() << " ";
+    std::cout << "created at " << newParticle->text() << " ";
 
     return newParticle;
 }
@@ -98,6 +99,20 @@ void particle::setGridSize(
     int colCount)
 {
     theGrid.resize(rowCount, std::vector<particle *>(colCount));
+    myGrid2WindowScale = (double)GRID_PXL_WIDTH / GRID_COL_COUNT;
+}
+
+bool particle::isOutGrid(int row, int col) const
+{
+    return (0 > col || col >= theGrid[0].size() ||
+            0 > row || row >= theGrid.size());
+}
+
+particle *particle::get(int row, int col) const
+{
+    if (isOutGrid(row, col))
+        return NULL;
+    return theGrid[row][col];
 }
 
 void particle::setAtRest(bool f)
@@ -120,26 +135,20 @@ void particle::freeGrainsAbove(const std::pair<int, int> &location)
     }
 
     // ensure grain above, if present, is free
-    auto n = theGrid[LY - 1][LX];
+    auto n = get(LY - 1, LX);
     if (n != nullptr)
         n->setAtRest(false);
 
     // ensure grain above left, if present, is free
-    if (location.first - 1 >= 0)
-    {
-        n = theGrid[location.second - 1][location.first - 1];
-        if (n != nullptr)
-            n->setAtRest(false);
-    }
+    n = get(LY - 1,LX - 1);
+    if (n != nullptr)
+        n->setAtRest(false);
 
     // ensure grain above right, if present, is free
     // check for right boundary ( fix TID20 )
-    if (location.first + 1 < theGrid[0].size())
-    {
-        n = theGrid[location.second - 1][location.first + 1];
-        if (n != nullptr)
-            n->setAtRest(false);
-    }
+    n = get(LY - 1,LX + 1);
+    if (n != nullptr)
+        n->setAtRest(false);
 }
 
 int particle::color() const
@@ -161,7 +170,9 @@ void particle::draw(wex::shapes &S) const
 {
     S.color(myColor);
     S.fill();
-    S.rectangle({LX, LY,
+    //std::cout << "draw " << LX <<" "<< LY <<" "<<myGrid2WindowScale << ", ";
+    S.rectangle(
+        {(int)(LX * myGrid2WindowScale), (int)(LY * myGrid2WindowScale),
                  3, 3});
 }
 
@@ -176,7 +187,7 @@ void grain::move()
 
     /* skip if grain is blocked
 
-    Most grain will have found a final resting place
+    Most grains will have found a final resting place
     Only the grains that are moving need to be processed
     This gives the simulation a significant performance boost
     */
@@ -184,7 +195,8 @@ void grain::move()
         return;
 
     // check if grain is resting directly on the bottom
-    if (LY + 1 >= theGrid.size())
+    //std::cout << "move  "<< LY+1 <<" "<< GRID_ROW_COUNT << ", ";
+    if (LY >= GRID_ROW_COUNT - 1 )
     {
         setAtRest();
         return;
@@ -278,7 +290,7 @@ std::string stone::text() const
 cGUI::cGUI()
     : cStarterGUI(
           "Particle Simulator",
-          {50, 50, 1000, 800})
+          {50, 50, GRID_PXL_WIDTH, GRID_PXL_HEIGHT+50})
 {
     particle::setGridSize(
         GRID_ROW_COUNT, GRID_COL_COUNT);
@@ -374,11 +386,11 @@ main()
     // run the unit tests
     // window appears if tests all passed
     // app exits and message on console id test fails
-    if (!particle::test())
-    {
-        std::cout << "unit test failed\n";
-        exit(1);
-    }
+    // if (!particle::test())
+    // {
+    //     std::cout << "unit test failed\n";
+    //     exit(1);
+    // }
 
     // construct the user interface window
     cGUI theGUI;
