@@ -10,7 +10,7 @@
 
 #define LX myLocation.second
 #define LY myLocation.first
-#define msStep 100 // update wall clock step milliseconds ( 100 = 10 fps )
+#define msStep 10 // update wall clock step milliseconds ( 100 = 10 fps )
 
 class cGUI : public cStarterGUI
 {
@@ -22,6 +22,9 @@ private:
     wex::timer *myMoveTimer;
 
     int myKeyDown;
+
+    void constructTimers();
+    void registerEventHandlers();
 
     void draw(wex::shapes &S);
     void move();
@@ -51,11 +54,12 @@ particle *particle::factory(
     // std::cout << "keydown " << keydown << "\n";
 
     // grid location of mouse cursor
-    int ix = m.x / 5;
-    int iy = m.y / 5;
+    int ix = m.y;
+    int iy = m.x;
 
     // check within bounds
-    if (ix < 0 || iy < 0)
+    if (0 > ix || ix >= theGrid[0].size() ||
+        0 > iy || iy >= theGrid.size()         )
         return NULL;
 
     // check location is empty
@@ -86,7 +90,7 @@ particle *particle::factory(
     // place particle in grid
     theGrid[iy][ix] = newParticle;
 
-    std::cout << "created at " << newParticle->text() << " ";
+    //std::cout << "created at " << newParticle->text() << " ";
 
     return newParticle;
 }
@@ -111,7 +115,7 @@ void particle::freeGrainsAbove(const std::pair<int, int> &location)
     }
 
     // ensure grain above, if present, is free
-    auto n = theGrid[location.second - 1][location.first];
+    auto n = theGrid[LY - 1][LX];
     if (n != nullptr)
         n->setAtRest(false);
 
@@ -153,7 +157,7 @@ void particle::draw(wex::shapes &S) const
     S.color(myColor);
     S.fill();
     S.rectangle({LX, LY,
-                 10, 10});
+                 3, 3});
 }
 
 grain::grain(int x, int y)
@@ -184,7 +188,7 @@ void grain::move()
     // try moving grain down
     auto prevLocation = myLocation;
     bool fMoved = false;
-    if (theGrid[LX + 1][LY] == NULL)
+    if (theGrid[LY + 1][LX] == NULL)
     {
         // cell below is empty so grain can fall straight down
 
@@ -222,6 +226,8 @@ void grain::move()
     {
         // free grains that may have been blocked;
         freeGrainsAbove(prevLocation);
+
+        //std::cout << " moved " << text() << " ";
     }
     else
     {
@@ -271,6 +277,29 @@ cGUI::cGUI()
 {
     theGrid.resize(500, std::vector<particle *>(500));
 
+    constructTimers();
+
+    registerEventHandlers();
+
+    show();
+    run();
+}
+
+void cGUI::constructTimers()
+{
+    /*  
+    One updates the display with the latest particle position
+    Two moves the particle positions
+
+    Two timers are needed so that the windows message pump
+    will alternate particle moves and display updates
+    */
+   myUpdateTimer = new wex::timer(fm, msStep, 1);
+   myMoveTimer = new wex::timer(fm, msStep, 2);
+}
+
+void cGUI::registerEventHandlers()
+{
     fm.events().draw(
         [&](PAINTSTRUCT &ps)
         {
@@ -278,16 +307,13 @@ cGUI::cGUI()
             draw(S);
         });
 
-    myUpdateTimer = new wex::timer(fm, msStep, 1);
-    myMoveTimer = new wex::timer(fm, msStep, 2);
-
     fm.events().timer(
         [this](int id)
         {
             switch (id)
             {
             case 2:
-                // create new partical at mouse cursor position
+                // create new particle at mouse cursor position
                 // if left mouse button down and last key pressed was
                 // g for a grain of sand
                 // w for a drop of water
@@ -296,7 +322,6 @@ cGUI::cGUI()
 
                 // update position of all particles free to move
                 move();
-                fm.update();
                 break;
 
             case 1:
@@ -310,10 +335,8 @@ cGUI::cGUI()
         {
             myKeyDown = keyCode;
         });
-
-    show();
-    run();
 }
+
 
 void cGUI::draw(wex::shapes &S)
 {
@@ -335,7 +358,7 @@ void cGUI::move()
     for (int krow = theGrid.size(); krow >= 0; krow-- )
         for (particle *p : theGrid[krow])
         {
-            // if particle present, draw it
+            // if particle present, move it
             if (p)
                 p->move();
         }
