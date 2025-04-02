@@ -25,7 +25,7 @@ OBJ_starter = \
 
 ### COMPILE
 
-$(ODIR)/%.o: %.cpp  
+$(ODIR)/%.o: %.cpp SimParticle.h 
 	g++ $< \
 	-c -o $@  $(INCS) $(CCflags)
 

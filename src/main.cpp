@@ -11,6 +11,10 @@
 #define LX myLocation.second
 #define LY myLocation.first
 #define msStep 10 // update wall clock step milliseconds ( 100 = 10 fps )
+#define GRID_ROW_COUNT 500
+#define GRID_COL_COUNT 500
+
+grid_t particle::theGrid;
 
 class cGUI : public cStarterGUI
 {
@@ -25,13 +29,7 @@ private:
 
     void constructTimers();
     void registerEventHandlers();
-
-    void draw(wex::shapes &S);
-    void move();
 };
-
-// store the particles in their grid locations
-std::vector<std::vector<particle *>> theGrid;
 
 particle::particle()
     : myColor(0x0000FF)
@@ -57,9 +55,9 @@ particle *particle::factory(
     int ix = m.y;
     int iy = m.x;
 
-    // check within bounds
+    // check within bounds 
     if (0 > ix || ix >= theGrid[0].size() ||
-        0 > iy || iy >= theGrid.size()         )
+        0 > iy || iy >= theGrid.size())
         return NULL;
 
     // check location is empty
@@ -90,9 +88,16 @@ particle *particle::factory(
     // place particle in grid
     theGrid[iy][ix] = newParticle;
 
-    //std::cout << "created at " << newParticle->text() << " ";
+    // std::cout << "created at " << newParticle->text() << " ";
 
     return newParticle;
+}
+
+void particle::setGridSize(
+    int rowCount,
+    int colCount)
+{
+    theGrid.resize(rowCount, std::vector<particle *>(colCount));
 }
 
 void particle::setAtRest(bool f)
@@ -227,7 +232,7 @@ void grain::move()
         // free grains that may have been blocked;
         freeGrainsAbove(prevLocation);
 
-        //std::cout << " moved " << text() << " ";
+        // std::cout << " moved " << text() << " ";
     }
     else
     {
@@ -275,7 +280,8 @@ cGUI::cGUI()
           "Particle Simulator",
           {50, 50, 1000, 800})
 {
-    theGrid.resize(500, std::vector<particle *>(500));
+    particle::setGridSize(
+        GRID_ROW_COUNT, GRID_COL_COUNT);
 
     constructTimers();
 
@@ -287,15 +293,15 @@ cGUI::cGUI()
 
 void cGUI::constructTimers()
 {
-    /*  
+    /*
     One updates the display with the latest particle position
     Two moves the particle positions
 
     Two timers are needed so that the windows message pump
     will alternate particle moves and display updates
     */
-   myUpdateTimer = new wex::timer(fm, msStep, 1);
-   myMoveTimer = new wex::timer(fm, msStep, 2);
+    myUpdateTimer = new wex::timer(fm, msStep, 1);
+    myMoveTimer = new wex::timer(fm, msStep, 2);
 }
 
 void cGUI::registerEventHandlers()
@@ -304,7 +310,7 @@ void cGUI::registerEventHandlers()
         [&](PAINTSTRUCT &ps)
         {
             wex::shapes S(ps);
-            draw(S);
+            particle::drawAll(S);
         });
 
     fm.events().timer(
@@ -321,7 +327,7 @@ void cGUI::registerEventHandlers()
                 particle::factory(fm.getMouseStatus(), myKeyDown);
 
                 // update position of all particles free to move
-                move();
+                particle::moveAll();
                 break;
 
             case 1:
@@ -337,8 +343,7 @@ void cGUI::registerEventHandlers()
         });
 }
 
-
-void cGUI::draw(wex::shapes &S)
+void particle::drawAll(wex::shapes &S)
 {
     // loop over grid
     for (auto &row : theGrid)
@@ -352,10 +357,10 @@ void cGUI::draw(wex::shapes &S)
         }
 }
 
-void cGUI::move()
+void particle::moveAll()
 {
     // loop over grid
-    for (int krow = theGrid.size(); krow >= 0; krow-- )
+    for (int krow = theGrid.size(); krow >= 0; krow--)
         for (particle *p : theGrid[krow])
         {
             // if particle present, move it
@@ -367,11 +372,16 @@ void cGUI::move()
 main()
 {
     // run the unit tests
-    if( ! particle::test() ) {
+    // window appears if tests all passed
+    // app exits and message on console id test fails
+    if (!particle::test())
+    {
         std::cout << "unit test failed\n";
         exit(1);
     }
 
+    // construct the user interface window
     cGUI theGUI;
+
     return 0;
 }
