@@ -113,11 +113,10 @@ bool particle::isAtRest() const
 void particle::clearMoveFlags()
 {
     myfMove = false;
-    for( auto& row : theGrid )
-        for( particle* p : row )
-            if( p )
+    for (auto &row : theGrid)
+        for (particle *p : row)
+            if (p)
                 p->myfMoveThis = false;
-    
 }
 
 void particle::freeGrainsAbove(const std::pair<int, int> &location)
@@ -191,7 +190,7 @@ bool particle::moveAll()
     particle::clearMoveFlags();
 
     // loop over grid
-    for( auto& row : theGrid )
+    for (auto &row : theGrid)
         for (particle *p : row)
         {
             // if particle present, move it
@@ -220,7 +219,7 @@ void grain::move()
     if (isAtRest())
         return;
 
-    if( myfMoveThis )
+    if (myfMoveThis)
         return;
 
     // check if grain is resting directly on the bottom
@@ -278,7 +277,7 @@ void grain::move()
 
         myfMoveThis = true;
 
-        //std::cout << " moved " << text() << " ";
+        // std::cout << " moved " << text() << " ";
     }
     else
     {
@@ -304,7 +303,7 @@ void water::move()
         return;
 
     // skip if already moved once
-    if( myfMoveThis )
+    if (myfMoveThis)
         return;
 
     // check if resting directly on the bottom
@@ -326,39 +325,87 @@ void water::move()
         LY++;
         fMoved = true;
         myfMoveThis = true;
-    } else {
+    }
+    else
+    {
 
         // flow until water finds its own level
         int flowDistance;
-        for( flowDistance = 1; flowDistance < GRID_COL_COUNT; flowDistance++ )
+        bool flowLeft = true;
+        bool flowRight = true;
+        for (flowDistance = 1; flowDistance < GRID_COL_COUNT; flowDistance++)
         {
-            if( LX - flowDistance < 0 )
-                continue;
-            if( get(LY+1,LX-flowDistance) == NULL )
+            if (flowLeft)
             {
-                // found a spot
-                flowDistance *= -1;
-                break;
+
+                // check for beyond grid
+                if (LX - flowDistance < 0)
+                {
+                    flowLeft = false;
+                    continue;
+                }
+
+                particle *part = get(LY + 1, LX - flowDistance);
+                if (part == NULL)
+                {
+                    // found a spot
+                    flowDistance *= -1;
+                    break;
+                }
+                else
+                {
+                    if (!dynamic_cast<water *>(part))
+                    {
+                        // reached a water barrier
+                        flowLeft = false;
+                        continue;
+                    }
+                }
             }
-            if( LX + flowDistance >= GRID_COL_COUNT )
-                continue;
-            if( get(LY+1,LX+flowDistance) == NULL )
+
+            if (flowRight)
             {
-                // found a spot
-                break;
+
+                if (LX + flowDistance >= GRID_COL_COUNT)
+                {
+                    flowRight = false;
+                    continue;
+                }
+
+                particle *part = get(LY + 1, LX + flowDistance);
+                if (part == NULL)
+                {
+                    // found a spot
+                    break;
+                }
+                else
+                {
+                    if (!dynamic_cast<water *>(part))
+                    {
+                        // reached a water barrier
+                        flowRight = false;
+                        continue;
+                    }
+                }
             }
         }
-        if( flowDistance < GRID_COL_COUNT ) {
-            // found a spot
-            theGrid[LY][LX+flowDistance] = this;
-            theGrid[LY][LX] = NULL;
-            LX += flowDistance;
-            myfMove = true;
-            myfMoveThis = true;
-        } else {
-            //blocked
+        if ((!flowLeft) && (!flowRight))
+        {
+            // blocked
             fAtRest = true;
         }
+        if (!flowRight)
+        {
+            // spot on left
+            flowDistance *= -1;
+        }
+
+        // found a spot
+        theGrid[LY][LX + flowDistance] = this;
+        theGrid[LY][LX] = NULL;
+        LX += flowDistance;
+        myfMove = true;
+        myfMoveThis = true;
     }
 }
 
