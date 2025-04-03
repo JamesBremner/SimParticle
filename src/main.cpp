@@ -5,7 +5,7 @@
 #include <vector>
 #include <algorithm>
 #include <wex.h>
-#include "cStarterGUI.h"
+#include "cGUI.h"
 #include "SimParticle.h"
 
 #define LX myLocation.second
@@ -15,20 +15,6 @@
 grid_t particle::theGrid;
 double particle::myGrid2WindowScale;
 bool particle::myfMove;
-
-class cGUI : public cStarterGUI
-{
-public:
-    cGUI();
-
-private:
-    wex::timer *myUpdateTimer;
-
-    int myKeyDown;
-
-    // void constructTimers();
-    void registerEventHandlers();
-};
 
 particle::particle()
     : myColor(0x0000FF)
@@ -89,7 +75,7 @@ particle *particle::factory(
     // place particle in grid
     theGrid[iy][ix] = newParticle;
 
-    std::cout << "created at " << newParticle->text() << " ";
+    // std::cout << "created at " << newParticle->text() << " ";
 
     return newParticle;
 }
@@ -122,6 +108,16 @@ void particle::setAtRest(bool f)
 bool particle::isAtRest() const
 {
     return fAtRest;
+}
+
+void particle::clearMoveFlags()
+{
+    myfMove = false;
+    for( auto& row : theGrid )
+        for( particle* p : row )
+            if( p )
+                p->myfMoveThis = false;
+    
 }
 
 void particle::freeGrainsAbove(const std::pair<int, int> &location)
@@ -176,6 +172,36 @@ void particle::draw(wex::shapes &S) const
          3, 3});
 }
 
+void particle::drawAll(wex::shapes &S)
+{
+    // loop over grid
+    for (auto &row : theGrid)
+        for (particle *p : row)
+        {
+            // if particle present, draw it
+            if (p)
+            {
+                p->draw(S);
+            }
+        }
+}
+
+bool particle::moveAll()
+{
+    particle::clearMoveFlags();
+
+    // loop over grid
+    for( auto& row : theGrid )
+        for (particle *p : row)
+        {
+            // if particle present, move it
+            if (p)
+                p->move();
+        }
+
+    return myfMove;
+}
+
 grain::grain(int x, int y)
     : particle(0x00FFFF, x, y)
 {
@@ -192,6 +218,9 @@ void grain::move()
     This gives the simulation a significant performance boost
     */
     if (isAtRest())
+        return;
+
+    if( myfMoveThis )
         return;
 
     // check if grain is resting directly on the bottom
@@ -247,7 +276,9 @@ void grain::move()
         // need a display update
         myfMove = true;
 
-        // std::cout << " moved " << text() << " ";
+        myfMoveThis = true;
+
+        //std::cout << " moved " << text() << " ";
     }
     else
     {
@@ -268,8 +299,42 @@ water::water(int x, int y)
 }
 void water::move()
 {
-    myLocation.first++;
+    // skip if blocked
+    if (isAtRest())
+        return;
+
+    // check if resting directly on the bottom
+    if (LY >= GRID_ROW_COUNT - 1)
+    {
+        setAtRest();
+        return;
+    }
+
+    bool fMoved = false;
+
+    // try moving down
+    if (theGrid[LY + 1][LX] == NULL)
+    {
+        // cell below is empty so can fall straight down
+
+        theGrid[LY + 1][LX] = this;
+        theGrid[LY][LX] = NULL;
+        LY++;
+        fMoved = true;
+    } else {
+
+    }
+
+    if (fMoved)
+    {
+        // free grains that may have been blocked;
+        //freeGrainsAbove(prevLocation);
+
+        // need a display update
+        myfMove = true;
+    }
 }
+
 std::string water::text() const
 {
     std::string ret(" water ");
@@ -290,96 +355,16 @@ std::string stone::text() const
     return ret + particle::text();
 }
 
-cGUI::cGUI()
-    : cStarterGUI(
-          "Particle Simulator",
-          {50, 50, GRID_PXL_WIDTH, GRID_PXL_HEIGHT + 50})
-{
-    particle::setGridSize(
-        GRID_ROW_COUNT, GRID_COL_COUNT);
-
-    myUpdateTimer = new wex::timer(fm, msStep, 1);
-
-    registerEventHandlers();
-
-    show();
-    run();
-}
-
-void cGUI::registerEventHandlers()
-{
-    fm.events().draw(
-        [&](PAINTSTRUCT &ps)
-        {
-            wex::shapes S(ps);
-            particle::drawAll(S);
-        });
-
-    fm.events().timer(
-        [this](int id)
-        {
-            // create new particle at mouse cursor position
-            // if left mouse button down and last key pressed was
-            // g for a grain of sand
-            // w for a drop of water
-            // s for a stone
-            particle::factory(fm.getMouseStatus(), myKeyDown);
-
-            // update position of all particles free to move
-            if (particle::moveAll())
-            {
-                // a particle moved
-                fm.update();
-            }
-        });
-
-    fm.events().keydown(
-        [this](int keyCode)
-        {
-            myKeyDown = keyCode;
-        });
-}
-
-void particle::drawAll(wex::shapes &S)
-{
-    // loop over grid
-    for (auto &row : theGrid)
-        for (particle *p : row)
-        {
-            // if particle present, draw it
-            if (p)
-            {
-                p->draw(S);
-            }
-        }
-}
-
-bool particle::moveAll()
-{
-    myfMove = false;
-
-    // loop over grid
-    for (int krow = theGrid.size(); krow >= 0; krow--)
-        for (particle *p : theGrid[krow])
-        {
-            // if particle present, move it
-            if (p)
-                p->move();
-        }
-
-    return myfMove;
-}
-
 main()
 {
     // run the unit tests
     // window appears if tests all passed
     // app exits and message on console id test fails
-    // if (!particle::test())
-    // {
-    //     std::cout << "unit test failed\n";
-    //     exit(1);
-    // }
+    if (!particle::test())
+    {
+        std::cout << "unit test failed\n";
+        exit(1);
+    }
 
     // construct the user interface window
     cGUI theGUI;
