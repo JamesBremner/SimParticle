@@ -34,7 +34,7 @@ particle *particle::factory(
     if (!m.left)
         return NULL;
 
-    // std::cout << "keydown " << keydown << "\n";
+    //std::cout << "keydown " << keydown << "\n";
 
     // grid location of mouse cursor
     const double scale = (double)GRID_COL_COUNT / GRID_PXL_WIDTH;
@@ -48,8 +48,12 @@ particle *particle::factory(
         return NULL;
 
     // check location is empty
-    if (theGrid[iy][ix] != NULL)
+    if (theGrid[iy][ix] != NULL) {
+        //std::cout << "cell occupied " << iy << " " << ix << "\n";
         return NULL;
+    }
+
+    //std::cout << "cell free\n";
 
     // construct particle type selected by key last pressed
     particle *newParticle;
@@ -75,7 +79,7 @@ particle *particle::factory(
     // place particle in grid
     theGrid[iy][ix] = newParticle;
 
-    // std::cout << "created at " << newParticle->text() << " ";
+    // std::cout << "created at " << newParticle->text() << "\n";
 
     return newParticle;
 }
@@ -117,6 +121,28 @@ void particle::clearMoveFlags()
         for (particle *p : row)
             if (p)
                 p->myfMoveThis = false;
+}
+
+void particle::moveDown() {
+    // std::cout << "from " << LY << " " << LX;
+    theGrid[LY][LX] = NULL;
+    theGrid[LY+1][LX] = this;
+    LY++;
+    // std::cout << " to " << LY << " " << LX << "\n";
+}
+void particle::moveLeft() {
+    // std::cout << "from " << LY << " " << LX;
+    theGrid[LY][LX] = NULL;
+    theGrid[LY][LX-1] = this;
+    LX--;
+    // std::cout << " to " << LY << " " << LX << "\n";
+}
+void particle::moveRight(){
+    // std::cout << "from " << LY << " " << LX;
+    theGrid[LY][LX] = NULL;
+    theGrid[LY][LX+1] = this;
+    LX++;
+    // std::cout << " to " << LY << " " << LX << "\n";
 }
 
 void particle::freeGrainsAbove(const std::pair<int, int> &location)
@@ -165,7 +191,7 @@ void particle::draw(wex::shapes &S) const
 {
     S.color(myColor);
     S.fill();
-    // std::cout << "draw " << LX <<" "<< LY <<" "<<myGrid2WindowScale << ", ";
+    // std::cout << "draw " << LX <<" "<< LY <<" "<<myGrid2WindowScale << "\n";
     S.rectangle(
         {(int)(LX * myGrid2WindowScale), (int)(LY * myGrid2WindowScale),
          3, 3});
@@ -237,11 +263,9 @@ void grain::move()
     {
         // cell below is empty so grain can fall straight down
 
-        theGrid[LY + 1][LX] = this;
-        theGrid[LY][LX] = NULL;
-        LY++;
+        moveDown();
         fMoved = true;
-    }
+     }
     else if (
         LX + 1 < theGrid[0].size() &&
         theGrid[LY][LX + 1] == NULL &&
@@ -249,9 +273,8 @@ void grain::move()
     {
         // cells on right and down right are available
         // move right
-        theGrid[LY][LX + 1] = this;
-        theGrid[LY][LX] = NULL;
-        LX++;
+
+        moveRight();
         fMoved = true;
     }
     else if (
@@ -261,14 +284,18 @@ void grain::move()
     {
         // cells on left and down left are available
         // move left
-        theGrid[LY][LX - 1] = this;
-        theGrid[LY][LX] = NULL;
-        LX--;
+
+        moveLeft();
         fMoved = true;
     }
 
     if (fMoved)
     {
+        // if( theGrid[prevLocation.second][prevLocation.first] != NULL )
+        //     std::cout << prevLocation.first <<" "<< prevLocation.second << " occupied ";
+        // else
+        // std::cout << prevLocation.first <<" "<< prevLocation.second << "free ";
+
         // free grains that may have been blocked;
         freeGrainsAbove(prevLocation);
 
