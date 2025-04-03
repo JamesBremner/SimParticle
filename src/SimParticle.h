@@ -9,7 +9,8 @@
 #define GRID_PXL_HEIGHT 800
 
 class particle;
-typedef std::vector<std::vector<particle *>> grid_t;
+
+using  grid_t = std::vector<std::vector<particle *>>;
 
 //////////////////////////////////////
 // virtual base class for all particles
