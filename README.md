@@ -14,5 +14,10 @@ To demo how the different move algorithms are called for each particle type:
 https://github.com/user-attachments/assets/3f22564b-be63-4f8d-880a-45c778605309
 
   
- - water moves to the left
+ - water flows to find its own level
+
+
+https://github.com/user-attachments/assets/f4a02559-2fa3-4b9d-93ee-1db3ba0800c5
+
+
  - stones move to the right.
