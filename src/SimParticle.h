@@ -9,7 +9,7 @@
 #define GRID_PXL_HEIGHT 800
 
 class particle;
-typedef  std::vector<std::vector<particle *>> grid_t;
+typedef std::vector<std::vector<particle *>> grid_t;
 
 //////////////////////////////////////
 // virtual base class for all particles
@@ -21,7 +21,13 @@ public:
 
     static void setGridSize(
         int rowCount,
-        int colCount    );
+        int colCount);
+
+    // Construct particle of required type
+    static particle *factory(
+        const wex::sMouse &m,
+        int keyDown);
+
     static void drawAll(wex::shapes &S);
 
     /// @brief Move all particles that are not blocked
@@ -33,15 +39,18 @@ public:
     // but allows the correct method to run for the specialized particles
     virtual void move() = 0;
 
-    // Construct particle of required type
-    static particle *factory(
-        const wex::sMouse &m,
-        int keyDown);
+    // move particle one cell
+    void moveDown();
+    void moveLeft();
+    void moveRight();
 
-    bool isOutGrid(int row, int col ) const;
-    particle* get(int row, int col ) const;
+    // true if inside the grid
+    bool isOutGrid(int row, int col) const;
 
-    void setAtRest( bool f = true );
+    // get particle at grid location
+    particle *get(int row, int col) const;
+
+    void setAtRest(bool f = true);
     bool isAtRest() const;
 
     int color() const;
@@ -55,22 +64,21 @@ public:
     static bool test();
 
 protected:
-
     // attributes of this particle
     int myColor;
     std::pair<int, int> myLocation;
-    bool fAtRest;       // true if particle is blocked
-    bool myfMoveThis;    // true if this particle moved 
+    bool fAtRest;     // true if particle is blocked
+    bool myfMoveThis; // true if this particle moved
 
     // static attributes shared by all particles
 
     static double myGrid2WindowScale;
-    static bool myfMove;                // true if any of the particles moved
+    static bool myfMove; // true if any of the particles moved
 
     // store the particles in their grid locations
     static grid_t theGrid;
 
-    void freeGrainsAbove(const std::pair<int,int>& location);
+    void freeGrainsAbove(const std::pair<int, int> &location);
 
     /*  The move flags are set to false at start of each position update
 
