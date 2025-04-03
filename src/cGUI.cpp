@@ -1,10 +1,10 @@
 #include "cGUI.h"
 
 cGUI::cGUI()
-    : cStarterGUI(
-          "Particle Simulator",
-          {50, 50, GRID_PXL_WIDTH, GRID_PXL_HEIGHT + 50})
+: fm(wex::maker::make())
 {
+    fm.move({50, 50, GRID_PXL_WIDTH, GRID_PXL_HEIGHT + 50});
+    fm.text("Raven's Particle Simulator");
     fm.bgcolor( 0 );
 
     particle::setGridSize(
