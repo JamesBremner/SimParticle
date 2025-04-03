@@ -84,7 +84,10 @@ protected:
     */
     static void clearMoveFlags();
 
+    // unit tests
 
+    static bool testGrainMove();
+    static bool testWaterMove();
 };
 
 //////////////////////////////////////

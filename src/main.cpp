@@ -294,13 +294,17 @@ std::string grain::text() const
 }
 
 water::water(int x, int y)
-    : particle(0xFF0000, x, y)
+    : particle(0xFDFB73, x, y)
 {
 }
 void water::move()
 {
     // skip if blocked
     if (isAtRest())
+        return;
+
+    // skip if already moved once
+    if( myfMoveThis )
         return;
 
     // check if resting directly on the bottom
@@ -321,17 +325,40 @@ void water::move()
         theGrid[LY][LX] = NULL;
         LY++;
         fMoved = true;
+        myfMoveThis = true;
     } else {
 
-    }
-
-    if (fMoved)
-    {
-        // free grains that may have been blocked;
-        //freeGrainsAbove(prevLocation);
-
-        // need a display update
-        myfMove = true;
+        // flow until water finds its own level
+        int flowDistance;
+        for( flowDistance = 1; flowDistance < GRID_COL_COUNT; flowDistance++ )
+        {
+            if( LX - flowDistance < 0 )
+                continue;
+            if( get(LY+1,LX-flowDistance) == NULL )
+            {
+                // found a spot
+                flowDistance *= -1;
+                break;
+            }
+            if( LX + flowDistance >= GRID_COL_COUNT )
+                continue;
+            if( get(LY+1,LX+flowDistance) == NULL )
+            {
+                // found a spot
+                break;
+            }
+        }
+        if( flowDistance < GRID_COL_COUNT ) {
+            // found a spot
+            theGrid[LY][LX+flowDistance] = this;
+            theGrid[LY][LX] = NULL;
+            LX += flowDistance;
+            myfMove = true;
+            myfMoveThis = true;
+        } else {
+            //blocked
+            fAtRest = true;
+        }
     }
 }
 
