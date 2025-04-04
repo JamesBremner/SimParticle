@@ -420,11 +420,11 @@ main()
     // run the unit tests
     // window appears if tests all passed
     // app exits and message on console id test fails
-    // if (!particle::test())
-    // {
-    //     std::cout << "unit test failed\n";
-    //     exit(1);
-    // }
+    if (!particle::test())
+    {
+        std::cout << "unit test failed\n";
+        exit(1);
+    }
 
     // construct the user interface window
     cGUI theGUI;
