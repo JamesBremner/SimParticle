@@ -8,8 +8,8 @@
 #include "cGUI.h"
 #include "SimParticle.h"
 
-#define LCOL myLocation.first
-#define LROW myLocation.second
+#define LROW myLocation.first
+#define LCOL myLocation.second
 
 // storage for particle static attributes
 grid_t particle::theGrid;
@@ -25,6 +25,8 @@ particle::particle(int color, int row, int col)
       myLocation(std::make_pair(row, col)),
       fAtRest(false)
 {
+    theGrid[row][col] = this;
+    // std::cout << "created at "<< LROW <<" "<< LCOL <<" "<< row <<" "<< col << "\n";
 }
 particle *particle::factory(
     const wex::sMouse &m,
@@ -34,12 +36,22 @@ particle *particle::factory(
     if (!m.left)
         return NULL;
 
-    //std::cout << "keydown " << keydown << "\n";
+    /* convert mouse cursor position to grid location
 
-    // grid location of mouse cursor
-    const double scale = (double)GRID_COL_COUNT / GRID_PXL_WIDTH;
-    int row = m.x * scale;
-    int col = m.y * scale;
+    Note that x => row and y => col
+
+    This is strange. 
+    It seems that there is a mixup somewhere between rows and cols,
+    but I cannot find it. 
+
+    If this is NOT done bad things happen
+    - the particle does NOT appear under the cursor
+    - holding mouse button down creates just one particle, need to move cursor slightly
+    - particles fall sideways
+    */
+
+    int row = m.y / myGrid2WindowScale;
+    int col = m.x / myGrid2WindowScale;
 
     // check within bounds
     // note cannot use isOutGrid method because this method is static
@@ -49,7 +61,7 @@ particle *particle::factory(
 
     // check location is empty
     if (theGrid[row][col] != NULL) {
-        //std::cout << "cell occupied " << iy << " " << ix << "\n";
+        // std::cout << "cell occupied " << row << " " << col << "\n";
         return NULL;
     }
 
@@ -75,11 +87,6 @@ particle *particle::factory(
     default:
         return NULL;
     }
-
-    // place particle in grid
-    theGrid[row][col] = newParticle;
-
-    // std::cout << "created at " << newParticle->text() << "\n";
 
     return newParticle;
 }
@@ -125,11 +132,11 @@ void particle::clearMoveFlags()
 }
 
 void particle::moveDown() {
-    // std::cout << "from " << LROW << " " << LCOL;
+    //  std::cout << "from " << LROW << " " << LCOL;
     theGrid[LROW][LCOL] = NULL;
     theGrid[LROW+1][LCOL] = this;
     LROW++;
-    // std::cout << " to " << LROW << " " << LCOL << "\n";
+    //  std::cout << " to " << LROW << " " << LCOL << "\n";
 }
 void particle::moveLeft() {
     // std::cout << "from " << LROW << " " << LCOL;
