@@ -372,13 +372,13 @@ void water::move()
             {
 
                 // check for beyond grid
-                if (LX - flowDistance < 0)
+                if (LCOL - flowDistance < 0)
                 {
                     flowLeft = false;
                     continue;
                 }
 
-                particle *part = get(LY + 1, LX - flowDistance);
+                particle *part = get(LROW + 1, LCOL - flowDistance);
                 if (part == NULL)
                 {
                     // found a spot
@@ -399,13 +399,13 @@ void water::move()
             if (flowRight)
             {
 
-                if (LX + flowDistance >= GRID_COL_COUNT)
+                if (LCOL + flowDistance >= GRID_COL_COUNT)
                 {
                     flowRight = false;
                     continue;
                 }
 
-                particle *part = get(LY + 1, LX + flowDistance);
+                particle *part = get(LCOL + 1, LROW + flowDistance);
                 if (part == NULL)
                 {
                     // found a spot
@@ -434,9 +434,9 @@ void water::move()
         }
 
         // found a spot
-        theGrid[LY][LX + flowDistance] = this;
-        theGrid[LY][LX] = NULL;
-        LX += flowDistance;
+        theGrid[LROW][LCOL + flowDistance] = this;
+        theGrid[LROW][LCOL] = NULL;
+        LCOL += flowDistance;
         myfMove = true;
         myfMoveThis = true;
     }
