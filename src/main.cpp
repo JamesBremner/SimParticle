@@ -297,6 +297,7 @@ void grain::move()
             // so replace water that was displaced
             auto w = new water(prevLocation.first,prevLocation.second);
             w->setAtRest();
+            theGrid[prevLocation.first][prevLocation.second] = w;
         }
 
         // remember to replace the water
