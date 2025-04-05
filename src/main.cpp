@@ -359,18 +359,15 @@ void water::move()
         return;
     }
 
-    bool fMoved = false;
-
-    // try moving down
+    // check if there is empty cell directly below
     if (theGrid[LROW + 1][LCOL] == NULL)
     {
-        // cell below is empty so can fall straight down
         moveDown();
     }
     else
     {
-
-        // flow until water finds its own level
+        // flow left and right until water finds its own level
+        // search for nearest empty spot in either direction
         int flowDistance;
         bool flowLeft = true;
         bool flowRight = true;
@@ -382,6 +379,7 @@ void water::move()
             if( ( ! flowLeft ) && ( ! flowRight ))
                 break;
 
+            // check if still spreading on left
             if (flowLeft)
             {
                 // check for beyond grid
@@ -410,17 +408,17 @@ void water::move()
                 }
             }
 
+            // check if still spreading on right
             if (flowRight)
             {
                 // check for beyond grid
                 if (LCOL + flowDistance >= GRID_COL_COUNT)
                 {
-                    //std::cout << "right bound\n";
                     flowRight = false;
                 }
                 else
                 {
-
+                    // check for empty spot at pool limit on right
                     particle *part = get(LROW + 1, LCOL + flowDistance);
                     if (part == NULL)
                     {
@@ -438,16 +436,18 @@ void water::move()
                 }
             }
         }
+
+        // check if further spread blocked on both sides
         if ((!flowLeft) && (!flowRight))
         {
-            // blocked
-            //std::cout << "blocked at " << LROW << " " << LCOL << "\n";
+            // start a new water level where water fell
             fAtRest = true;
             return;
         }
+
         if (!flowRight)
         {
-            // spot on left
+            // the nearest empty spot on left
             flowDistance *= -1;
         }
 
