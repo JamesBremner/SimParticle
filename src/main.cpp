@@ -23,7 +23,8 @@ particle::particle()
 particle::particle(int color, int row, int col)
     : myColor(color),
       myLocation(std::make_pair(row, col)),
-      fAtRest(false)
+      fAtRest(false),
+      myfReplacedWater(false)
 {
     theGrid[row][col] = this;
     // std::cout << "created at "<< LROW <<" "<< LCOL <<" "<< row <<" "<< col << "\n";
@@ -139,12 +140,12 @@ void particle::setMoveFlags()
 
 void particle::moveDown()
 {
-    //std::cout << "down " << LROW << " " << LCOL;
+    // std::cout << "down " << LROW << " " << LCOL;
     theGrid[LROW][LCOL] = NULL;
     theGrid[LROW + 1][LCOL] = this;
     LROW++;
     setMoveFlags();
-    //std::cout << " > " << LROW << " " << LCOL << "\n";
+    // std::cout << " > " << LROW << " " << LCOL << "\n";
 }
 void particle::moveLeft()
 {
@@ -275,17 +276,36 @@ void grain::move()
         return;
     }
 
-    // try moving grain down
+    // check if cell below is empty so grain can fall straight down
     auto prevLocation = myLocation;
     bool fMoved = false;
     if (theGrid[LROW + 1][LCOL] == NULL)
     {
-        // cell below is empty so grain can fall straight down
-
         moveDown();
-        fMoved = true;
+        return;
     }
-    else if (
+
+    // check if cell below contains water,
+    // so grain will continue sinking through water
+    if( dynamic_cast<water *>(theGrid[LROW + 1][LCOL]) )
+    {
+        moveDown();
+
+        if( myfReplacedWater )
+        {
+            // sinking through water
+            // so replace water that was displaced
+            auto w = new water(prevLocation.first,prevLocation.second);
+            w->setAtRest();
+        }
+
+        // remember to replace the water
+        myfReplacedWater = true;
+
+        return;
+    }
+
+    if (
         LCOL + 1 < theGrid[0].size() &&
         theGrid[LROW][LCOL + 1] == NULL &&
         theGrid[LROW + 1][LCOL + 1] == NULL)
@@ -363,102 +383,101 @@ void water::move()
     if (theGrid[LROW + 1][LCOL] == NULL)
     {
         moveDown();
+        return;
     }
-    else
+
+    // flow left and right until water finds its own level
+    // search for nearest empty spot in either direction
+    int flowDistance;
+    bool flowLeft = true;
+    bool flowRight = true;
+    for (flowDistance = 1; flowDistance < GRID_COL_COUNT; flowDistance++)
     {
-        // flow left and right until water finds its own level
-        // search for nearest empty spot in either direction
-        int flowDistance;
-        bool flowLeft = true;
-        bool flowRight = true;
-        for (flowDistance = 1; flowDistance < GRID_COL_COUNT; flowDistance++)
-        {
-            //std::cout << (int)flowLeft << " " << (int)flowRight << " " << flowDistance << " > ";
+        // std::cout << (int)flowLeft << " " << (int)flowRight << " " << flowDistance << " > ";
 
-            // check for blocked on bothe sides
-            if( ( ! flowLeft ) && ( ! flowRight ))
-                break;
-
-            // check if still spreading on left
-            if (flowLeft)
-            {
-                // check for beyond grid
-                if (LCOL - flowDistance < 0)
-                {
-                    //std::cout << "left bound\n";
-                    flowLeft = false;
-                }
-                else
-                {
-                    particle *part = get(LROW + 1, LCOL - flowDistance);
-                    if (part == NULL)
-                    {
-                        // found a spot
-                        flowDistance *= -1;
-                        break;
-                    }
-                    else
-                    {
-                        if (!dynamic_cast<water *>(part))
-                        {
-                            // reached a water barrier
-                            flowLeft = false;
-                        }
-                    }
-                }
-            }
-
-            // check if still spreading on right
-            if (flowRight)
-            {
-                // check for beyond grid
-                if (LCOL + flowDistance >= GRID_COL_COUNT)
-                {
-                    flowRight = false;
-                }
-                else
-                {
-                    // check for empty spot at pool limit on right
-                    particle *part = get(LROW + 1, LCOL + flowDistance);
-                    if (part == NULL)
-                    {
-                        // found a spot
-                        break;
-                    }
-                    else
-                    {
-                        if (!dynamic_cast<water *>(part))
-                        {
-                            // reached a water barrier
-                            flowRight = false;
-                        }
-                    }
-                }
-            }
-        }
-
-        // check if further spread blocked on both sides
+        // check for blocked on both sides
         if ((!flowLeft) && (!flowRight))
+            break;
+
+        // check if still spreading on left
+        if (flowLeft)
         {
-            // start a new water level where water fell
-            fAtRest = true;
-            return;
+            // check for beyond grid
+            if (LCOL - flowDistance < 0)
+            {
+                // std::cout << "left bound\n";
+                flowLeft = false;
+            }
+            else
+            {
+                particle *part = get(LROW + 1, LCOL - flowDistance);
+                if (part == NULL)
+                {
+                    // found a spot
+                    flowDistance *= -1;
+                    break;
+                }
+                else
+                {
+                    if (!dynamic_cast<water *>(part))
+                    {
+                        // reached a water barrier
+                        flowLeft = false;
+                    }
+                }
+            }
         }
 
-        if (!flowRight)
+        // check if still spreading on right
+        if (flowRight)
         {
-            // the nearest empty spot on left
-            flowDistance *= -1;
+            // check for beyond grid
+            if (LCOL + flowDistance >= GRID_COL_COUNT)
+            {
+                flowRight = false;
+            }
+            else
+            {
+                // check for empty spot at pool limit on right
+                particle *part = get(LROW + 1, LCOL + flowDistance);
+                if (part == NULL)
+                {
+                    // found a spot
+                    break;
+                }
+                else
+                {
+                    if (!dynamic_cast<water *>(part))
+                    {
+                        // reached a water barrier
+                        flowRight = false;
+                    }
+                }
+            }
         }
-
-        // found a spot
-        theGrid[LROW][LCOL + flowDistance] = this;
-        theGrid[LROW][LCOL] = NULL;
-        LCOL += flowDistance;
-        setMoveFlags();
-        // std::cout << "distance " << flowDistance
-        //           << " water moves to " << LROW << " " << LCOL << "\n";
     }
+
+    // check if further spread blocked on both sides
+    if ((!flowLeft) && (!flowRight))
+    {
+        // start a new water level where water fell
+        fAtRest = true;
+        return;
+    }
+
+    if (!flowRight)
+    {
+        // the nearest empty spot on left
+        flowDistance *= -1;
+    }
+
+    // found a spot
+    theGrid[LROW][LCOL + flowDistance] = this;
+    theGrid[LROW][LCOL] = NULL;
+    LCOL += flowDistance;
+    setMoveFlags();
+    // std::cout << "distance " << flowDistance
+    //           << " water moves to " << LROW << " " << LCOL << "\n";
 }
 
 std::string water::text() const

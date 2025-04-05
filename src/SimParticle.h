@@ -72,6 +72,7 @@ protected:
     std::pair<int, int> myLocation;
     bool fAtRest;     // true if particle is blocked
     bool myfMoveThis; // true if this particle moved
+    bool myfReplacedWater;  // true if particle is sinking through water
 
     // static attributes shared by all particles
 
@@ -119,6 +120,8 @@ public:
     water(int x, int y);
     virtual void move();
     virtual std::string text() const;
+private:
+    bool canFlowLeft();
 };
 //////////////////////////////////////
 // A stone
