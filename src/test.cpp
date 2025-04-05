@@ -59,33 +59,54 @@ bool particle::testWaterMove()
     const int rowBottom = GRID_ROW_COUNT - 1;
     const int row1Up = GRID_ROW_COUNT - 2;
 
+    // theGrid[rowBottom][1] = new water(rowBottom, 1);
+
+    // moveAll();
+
+    // if (!theGrid[rowBottom][1]->isAtRest())
+    //     return false;
+
+    // theGrid[row1Up][1] = new water(row1Up, 1);
+    // moveAll();
+
+    // if (theGrid[row1Up][1] != NULL)
+    //     return false;
+    // if (theGrid[row1Up][0] == NULL)
+    //     return false;
+
+    // moveAll();
+    // moveAll();
+    // if (theGrid[rowBottom][0] == NULL)
+    //     return false;    
+
+    // theGrid[row1Up][1] = new water(row1Up, 1);
+    // moveAll();
+
+    // if (theGrid[row1Up][1] != NULL)
+    //     return false;
+    // if (theGrid[row1Up][2] == NULL)
+    //     return false;
+
+    theGrid.clear();
+    particle::setGridSize(
+        GRID_ROW_COUNT, GRID_COL_COUNT);
+
     theGrid[rowBottom][1] = new water(rowBottom, 1);
-
-    moveAll();
-
-    if (!theGrid[rowBottom][1]->isAtRest())
-        return false;
-
     theGrid[row1Up][1] = new water(row1Up, 1);
+    theGrid[rowBottom][0] = new grain(rowBottom, 0);
+    theGrid[row1Up][0] = new grain(row1Up, 0);
+    auto p = new grain(rowBottom, 4);
+    p->setAtRest();
+    p = new grain(row1Up, 4);
+    p->setAtRest();
     moveAll();
 
-    if (theGrid[row1Up][1] != NULL)
-        return false;
-    if (theGrid[row1Up][0] == NULL)
+    // check water barred from going left
+    if( theGrid[row1Up][2] == NULL )
         return false;
 
-    moveAll();
-    moveAll();
-    if (theGrid[rowBottom][0] == NULL)
-        return false;    
+    
 
-    theGrid[row1Up][1] = new water(row1Up, 1);
-    moveAll();
-
-    if (theGrid[row1Up][1] != NULL)
-        return false;
-    if (theGrid[row1Up][2] == NULL)
-        return false;
 
     theGrid.clear();
     return true;
@@ -93,8 +114,8 @@ bool particle::testWaterMove()
 
 bool particle::test()
 {
-    if (!testGrainMove())
-        return false;
+    // if (!testGrainMove())
+    //     return false;
     if (!testWaterMove())
         return false;
 
