@@ -5,6 +5,8 @@
 #define msStep 20 // update wall clock step milliseconds ( 10 = 100 fps )
 #define GRID_ROW_COUNT 400
 #define GRID_COL_COUNT 500
+//  #define GRID_ROW_COUNT 40
+//  #define GRID_COL_COUNT 50
 #define GRID_PXL_WIDTH 1000
 #define GRID_PXL_HEIGHT 800
 
@@ -83,7 +85,7 @@ protected:
 
     /*  The move flags are set to false at start of each position update
 
-    Theyprevent unneccessary display updates
+    They prevent unneccessary display updates
     when no particle moved during the update
 
     They prevent particles moving multiple times during a position update
@@ -92,6 +94,7 @@ protected:
 
     */
     static void clearMoveFlags();
+    void setMoveFlags();
 
     // unit tests
 

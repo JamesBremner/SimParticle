@@ -40,9 +40,9 @@ particle *particle::factory(
 
     Note that x => row and y => col
 
-    This is strange. 
+    This is strange.
     It seems that there is a mixup somewhere between rows and cols,
-    but I cannot find it. 
+    but I cannot find it.
 
     If this is NOT done bad things happen
     - the particle does NOT appear under the cursor
@@ -60,12 +60,13 @@ particle *particle::factory(
         return NULL;
 
     // check location is empty
-    if (theGrid[row][col] != NULL) {
+    if (theGrid[row][col] != NULL)
+    {
         // std::cout << "cell occupied " << row << " " << col << "\n";
         return NULL;
     }
 
-    //std::cout << "cell free\n";
+    // std::cout << "cell free\n";
 
     // construct particle type selected by key last pressed
     particle *newParticle;
@@ -73,15 +74,15 @@ particle *particle::factory(
     {
 
     case 71:
-        newParticle = new grain(row,col);
+        newParticle = new grain(row, col);
         break;
 
     case 83:
-        newParticle = new stone(row,col);
+        newParticle = new stone(row, col);
         break;
 
     case 87:
-        newParticle = new water(row,col);
+        newParticle = new water(row, col);
         break;
 
     default:
@@ -130,26 +131,38 @@ void particle::clearMoveFlags()
                 p->myfMoveThis = false;
 }
 
-void particle::moveDown() {
-    //  std::cout << "from " << LROW << " " << LCOL;
+void particle::setMoveFlags()
+{
+    myfMove = true;     // request display refresh
+    myfMoveThis = true; // prevent multiple moves ( teleporting )
+}
+
+void particle::moveDown()
+{
+    //std::cout << "down " << LROW << " " << LCOL;
     theGrid[LROW][LCOL] = NULL;
-    theGrid[LROW+1][LCOL] = this;
+    theGrid[LROW + 1][LCOL] = this;
     LROW++;
-    //  std::cout << " to " << LROW << " " << LCOL << "\n";
+    setMoveFlags();
+    //std::cout << " > " << LROW << " " << LCOL << "\n";
 }
-void particle::moveLeft() {
-    // std::cout << "from " << LROW << " " << LCOL;
+void particle::moveLeft()
+{
+    std::cout << "left " << LROW << " " << LCOL;
     theGrid[LROW][LCOL] = NULL;
-    theGrid[LROW][LCOL-1] = this;
+    theGrid[LROW][LCOL - 1] = this;
     LCOL--;
-    // std::cout << " to " << LROW << " " << LCOL << "\n";
+    setMoveFlags();
+    std::cout << " > " << LROW << " " << LCOL << "\n";
 }
-void particle::moveRight(){
-    // std::cout << "from " << LROW << " " << LCOL;
+void particle::moveRight()
+{
+    std::cout << "right " << LROW << " " << LCOL;
     theGrid[LROW][LCOL] = NULL;
-    theGrid[LROW][LCOL+1] = this;
+    theGrid[LROW][LCOL + 1] = this;
     LCOL++;
-    // std::cout << " to " << LROW << " " << LCOL << "\n";
+    setMoveFlags();
+    std::cout << " > " << LROW << " " << LCOL << "\n";
 }
 
 void particle::freeGrainsAbove(const std::pair<int, int> &location)
@@ -271,7 +284,7 @@ void grain::move()
 
         moveDown();
         fMoved = true;
-     }
+    }
     else if (
         LCOL + 1 < theGrid[0].size() &&
         theGrid[LROW][LCOL + 1] == NULL &&
@@ -352,12 +365,7 @@ void water::move()
     if (theGrid[LROW + 1][LCOL] == NULL)
     {
         // cell below is empty so can fall straight down
-
-        theGrid[LROW + 1][LCOL] = this;
-        theGrid[LROW][LCOL] = NULL;
-        LROW++;
-        fMoved = true;
-        myfMoveThis = true;
+        moveDown();
     }
     else
     {
@@ -368,64 +376,80 @@ void water::move()
         bool flowRight = true;
         for (flowDistance = 1; flowDistance < GRID_COL_COUNT; flowDistance++)
         {
+            //std::cout << (int)flowLeft << " " << (int)flowRight << " " << flowDistance << " > ";
+
+            // check for blocked on bothe sides
+            if( ( ! flowLeft ) && ( ! flowRight ))
+                break;
+
             if (flowLeft)
             {
-
                 // check for beyond grid
                 if (LCOL - flowDistance < 0)
                 {
+                    //std::cout << "left bound\n";
                     flowLeft = false;
-                    continue;
-                }
-
-                particle *part = get(LROW + 1, LCOL - flowDistance);
-                if (part == NULL)
-                {
-                    // found a spot
-                    flowDistance *= -1;
-                    break;
                 }
                 else
                 {
-                    if (!dynamic_cast<water *>(part))
+
+                    particle *part = get(LROW + 1, LCOL - flowDistance);
+                    if (part == NULL)
                     {
-                        // reached a water barrier
-                        flowLeft = false;
-                        continue;
+                        // found a spot
+                        flowDistance *= -1;
+                        //std::cout << "break 1\n";
+                        break;
                     }
+                    // else
+                    // {
+                    //     if (!dynamic_cast<water *>(part))
+                    //     {
+                    //         // reached a water barrier
+                    //         flowLeft = false;
+                    //         // continue;
+                    //     }
+                    // }
                 }
             }
 
             if (flowRight)
             {
-
+                // check for beyond grid
                 if (LCOL + flowDistance >= GRID_COL_COUNT)
                 {
+                    //std::cout << "right bound\n";
                     flowRight = false;
-                    continue;
-                }
-
-                particle *part = get(LCOL + 1, LROW + flowDistance);
-                if (part == NULL)
-                {
-                    // found a spot
-                    break;
                 }
                 else
                 {
-                    if (!dynamic_cast<water *>(part))
+
+                    particle *part = get(LROW + 1, LCOL + flowDistance);
+                    if (part == NULL)
                     {
-                        // reached a water barrier
-                        flowRight = false;
-                        continue;
+                        // found a spot
+
+                       // std::cout << "break 3\n";
+                        break;
                     }
+                    // else
+                    // {
+                    //     if (!dynamic_cast<water *>(part))
+                    //     {
+                    //         // reached a water barrier
+                    //         flowRight = false;
+                    //         continue;
+                    //     }
+                    // }
                 }
             }
         }
         if ((!flowLeft) && (!flowRight))
         {
             // blocked
+            //std::cout << "blocked at " << LROW << " " << LCOL << "\n";
             fAtRest = true;
+            return;
         }
         if (!flowRight)
         {
@@ -437,8 +461,9 @@ void water::move()
         theGrid[LROW][LCOL + flowDistance] = this;
         theGrid[LROW][LCOL] = NULL;
         LCOL += flowDistance;
-        myfMove = true;
-        myfMoveThis = true;
+        setMoveFlags();
+        // std::cout << "distance " << flowDistance
+        //           << " water moves to " << LROW << " " << LCOL << "\n";
     }
 }
 
