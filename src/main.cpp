@@ -166,16 +166,8 @@ void particle::moveRight()
     std::cout << " > " << LROW << " " << LCOL << "\n";
 }
 
-void particle::freeGrainsAbove(const std::pair<int, int> &location)
+void particle::freeGrainsAbove()
 {
-    // free grains that may have been blocked;
-
-    // check if grain is on window bottom - always blocked
-    if (location.second - 1 < 0)
-    {
-        return;
-    }
-
     // ensure grain above, if present, is free
     auto n = get(LROW - 1, LCOL);
     if (n != nullptr)
@@ -187,7 +179,6 @@ void particle::freeGrainsAbove(const std::pair<int, int> &location)
         n->setAtRest(false);
 
     // ensure grain above right, if present, is free
-    // check for right boundary ( fix TID20 )
     n = get(LROW - 1, LCOL + 1);
     if (n != nullptr)
         n->setAtRest(false);
@@ -337,7 +328,7 @@ void grain::move()
         // std::cout << prevLocation.first <<" "<< prevLocation.second << "free ";
 
         // free grains that may have been blocked;
-        freeGrainsAbove(prevLocation);
+        freeGrainsAbove();
 
         // need a display update
         myfMove = true;
