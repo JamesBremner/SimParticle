@@ -392,24 +392,21 @@ void water::move()
                 }
                 else
                 {
-
                     particle *part = get(LROW + 1, LCOL - flowDistance);
                     if (part == NULL)
                     {
                         // found a spot
                         flowDistance *= -1;
-                        //std::cout << "break 1\n";
                         break;
                     }
-                    // else
-                    // {
-                    //     if (!dynamic_cast<water *>(part))
-                    //     {
-                    //         // reached a water barrier
-                    //         flowLeft = false;
-                    //         // continue;
-                    //     }
-                    // }
+                    else
+                    {
+                        if (!dynamic_cast<water *>(part))
+                        {
+                            // reached a water barrier
+                            flowLeft = false;
+                        }
+                    }
                 }
             }
 
@@ -428,19 +425,16 @@ void water::move()
                     if (part == NULL)
                     {
                         // found a spot
-
-                       // std::cout << "break 3\n";
                         break;
                     }
-                    // else
-                    // {
-                    //     if (!dynamic_cast<water *>(part))
-                    //     {
-                    //         // reached a water barrier
-                    //         flowRight = false;
-                    //         continue;
-                    //     }
-                    // }
+                    else
+                    {
+                        if (!dynamic_cast<water *>(part))
+                        {
+                            // reached a water barrier
+                            flowRight = false;
+                        }
+                    }
                 }
             }
         }
