@@ -34,7 +34,7 @@ void cGUI::registerEventHandlers()
             // if left mouse button down and last key pressed was
             // g for a grain of sand
             // w for a drop of water
-            // s for a stone
+            
             particle::factory(fm.getMouseStatus(), myKeyDown);
 
             // update position of all particles free to move
@@ -42,8 +42,17 @@ void cGUI::registerEventHandlers()
             {
                 // a particle moved
 
+                /* To optimize simulation speed
+                refresh the display only after several moves
+                since each move is tiny. 
+
+                For debugging, slow things down
+                and let every move show
+                by setting DSP_SPEED to 1
+                */
+
                 static int count = 0;
-                if( count++ > 5 ) {
+                if( count++ > DSP_SPEED ) {
                     fm.update();
                     count = 0;
                 }
