@@ -230,9 +230,13 @@ bool particle::moveAll()
 {
     particle::clearMoveFlags();
 
-    // loop over grid
-    for (auto &row : theGrid)
-        for (particle *p : row)
+    /* loop over grid
+
+    The grid must be scanned upwards to prevent precipes forming
+    https://github.com/JamesBremner/SimParticle/issues/1#issuecomment-2781424962
+    */
+    for (int krow = theGrid.size()-1; krow >= 0; krow--)
+        for (particle *p : theGrid[krow])
         {
             // if particle present, move it
             if (p)
