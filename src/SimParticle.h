@@ -123,7 +123,10 @@ public:
     virtual void move();
     virtual std::string text() const;
 private:
-    bool canFlowLeft();
+
+    /// @brief distance water must spread to find its own level
+    /// @return distance or INT_MAX if blocked
+    int flowDistance();
 };
 //////////////////////////////////////
 // A stone

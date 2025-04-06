@@ -233,7 +233,7 @@ bool particle::moveAll()
     The grid must be scanned upwards to prevent precipes forming
     https://github.com/JamesBremner/SimParticle/issues/1#issuecomment-2781424962
     */
-    for (int krow = theGrid.size()-1; krow >= 0; krow--)
+    for (int krow = theGrid.size() - 1; krow >= 0; krow--)
         for (particle *p : theGrid[krow])
         {
             // if particle present, move it
@@ -362,6 +362,25 @@ void water::move()
         return;
     }
 
+    // calculate distance pool has spread out
+    int distance = flowDistance();
+    if ( fAtRest )
+    {
+        // blocked
+        return;
+    }
+
+    // found a spot
+    theGrid[LROW + 1][LCOL + distance] = this;
+    theGrid[LROW][LCOL] = NULL;
+    LROW++;
+    LCOL += distance;
+    setMoveFlags();
+
+}
+
+int water::flowDistance()
+{
     // flow left and right until water finds its own level
     // search for nearest empty spot in either direction
     int flowDistance;
@@ -372,8 +391,10 @@ void water::move()
         // std::cout << (int)flowLeft << " " << (int)flowRight << " " << flowDistance << " > ";
 
         // check for blocked on both sides
-        if ((!flowLeft) && (!flowRight))
-            break;
+        if ((!flowLeft) && (!flowRight)) {
+            fAtRest = true;
+            return INT_MAX;
+        }
 
         // check if still spreading on left
         if (flowLeft)
@@ -433,28 +454,7 @@ void water::move()
         }
     }
 
-    // check if further spread blocked on both sides
-    if ((!flowLeft) && (!flowRight))
-    {
-        // start a new water level where water fell
-        fAtRest = true;
-        return;
-    }
-
-    if (!flowRight)
-    {
-        // the nearest empty spot on left
-        flowDistance *= -1;
-    }
-
-    // found a spot
-    theGrid[LROW+1][LCOL + flowDistance] = this;
-    theGrid[LROW][LCOL] = NULL;
-    LROW++;
-    LCOL += flowDistance;
-    setMoveFlags();
-    // std::cout << "distance " << flowDistance
-    //           << " water moves to " << LROW << " " << LCOL << "\n";
+    return flowDistance;
 }
 
 std::string water::text() const
