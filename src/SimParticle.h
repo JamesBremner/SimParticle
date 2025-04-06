@@ -4,7 +4,7 @@
 // "magic numbers"
 
 #define msStep 10   // move update wall clock step milliseconds ( 10 = 100 fps )
-#define DSP_SPEED   // number moves between display udates
+#define DSP_SPEED 5  // number moves between display udates
 
 #define GRID_COL_COUNT 500
 #define GRID_ROW_COUNT 200
@@ -25,9 +25,7 @@ public:
     particle();
     particle(int color, int x, int y);
 
-    static void setGridSize(
-        int rowCount,
-        int colCount);
+    static void setGridSize();
 
     // Construct particle of required type
     static particle *factory(
@@ -104,6 +102,7 @@ protected:
 
     static bool testGrainMove();
     static bool testWaterMove();
+    static bool testWaterFlow();
 };
 
 //////////////////////////////////////

@@ -7,8 +7,7 @@ cGUI::cGUI()
     fm.text("Raven's Particle Simulator");
     fm.bgcolor( 0 );
 
-    particle::setGridSize(
-        GRID_ROW_COUNT, GRID_COL_COUNT);
+    particle::setGridSize();
 
     myUpdateTimer = new wex::timer(fm, msStep, 1);
 
@@ -34,7 +33,7 @@ void cGUI::registerEventHandlers()
             // if left mouse button down and last key pressed was
             // g for a grain of sand
             // w for a drop of water
-            
+
             particle::factory(fm.getMouseStatus(), myKeyDown);
 
             // update position of all particles free to move

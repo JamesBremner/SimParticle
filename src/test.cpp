@@ -2,10 +2,48 @@
 #include <vector>
 #include "SimParticle.h"
 
+bool particle::testWaterFlow()
+{
+    // test that water flows far enough to find its own level
+
+    particle::setGridSize();
+    const int rowBottom = GRID_ROW_COUNT - 1;
+    const int row1Up = GRID_ROW_COUNT - 2;
+
+    // test water finds its own level
+
+    theGrid.clear();
+    particle::setGridSize();
+    new water(rowBottom, 1);
+    new water(rowBottom, 2);
+    new water(rowBottom, 3);
+    new water(row1Up, 2);
+    moveAll();
+
+    // check that water flowed to left of pool
+    if (theGrid[rowBottom][0] == NULL)
+        return false;
+
+    new water(row1Up, 2);
+    moveAll();
+
+    // check that water flowed to right of pool
+    if (theGrid[rowBottom][4] == NULL)
+        return false;
+
+    new water(row1Up, 2);
+    moveAll();
+
+    if (theGrid[rowBottom][5] == NULL)
+        return false;
+
+    theGrid.clear();
+    return true;
+}
+
 bool particle::testGrainMove()
 {
-    particle::setGridSize(
-        GRID_ROW_COUNT, GRID_COL_COUNT);
+    particle::setGridSize();
     const int rowBottom = GRID_ROW_COUNT - 1;
     const int row1Up = GRID_ROW_COUNT - 2;
 
@@ -54,42 +92,41 @@ bool particle::testGrainMove()
 
 bool particle::testWaterMove()
 {
-    particle::setGridSize(
-        GRID_ROW_COUNT, GRID_COL_COUNT);
+    particle::setGridSize();
     const int rowBottom = GRID_ROW_COUNT - 1;
     const int row1Up = GRID_ROW_COUNT - 2;
 
-    // theGrid[rowBottom][1] = new water(rowBottom, 1);
+    theGrid[rowBottom][1] = new water(rowBottom, 1);
 
-    // moveAll();
+    moveAll();
 
-    // if (!theGrid[rowBottom][1]->isAtRest())
-    //     return false;
+    if (!theGrid[rowBottom][1]->isAtRest())
+        return false;
 
-    // theGrid[row1Up][1] = new water(row1Up, 1);
-    // moveAll();
+    theGrid[row1Up][1] = new water(row1Up, 1);
+    moveAll();
 
-    // if (theGrid[row1Up][1] != NULL)
-    //     return false;
-    // if (theGrid[row1Up][0] == NULL)
-    //     return false;
+    if (theGrid[row1Up][1] != NULL)
+        return false;
+    if (theGrid[rowBottom][0] == NULL)
+        return false;
 
-    // moveAll();
-    // moveAll();
-    // if (theGrid[rowBottom][0] == NULL)
-    //     return false;    
+    moveAll();
+    moveAll();
+    if (theGrid[rowBottom][0] == NULL)
+        return false;
 
-    // theGrid[row1Up][1] = new water(row1Up, 1);
-    // moveAll();
+    theGrid[row1Up][1] = new water(row1Up, 1);
+    moveAll();
 
-    // if (theGrid[row1Up][1] != NULL)
-    //     return false;
-    // if (theGrid[row1Up][2] == NULL)
-    //     return false;
+    if (theGrid[row1Up][1] != NULL)
+        return false;
+    if (theGrid[rowBottom][2] == NULL)
+        return false;
 
+    // test water barrier
     theGrid.clear();
-    particle::setGridSize(
-        GRID_ROW_COUNT, GRID_COL_COUNT);
+    particle::setGridSize();
 
     theGrid[rowBottom][1] = new water(rowBottom, 1);
     theGrid[row1Up][1] = new water(row1Up, 1);
@@ -102,11 +139,8 @@ bool particle::testWaterMove()
     moveAll();
 
     // check water barred from going left
-    if( theGrid[row1Up][2] == NULL )
+    if (theGrid[rowBottom][2] == NULL)
         return false;
-
-    
-
 
     theGrid.clear();
     return true;
@@ -114,8 +148,10 @@ bool particle::testWaterMove()
 
 bool particle::test()
 {
-    // if (!testGrainMove())
-    //     return false;
+    if (!testWaterFlow())
+        return false;
+    if (!testGrainMove())
+        return false;
     if (!testWaterMove())
         return false;
 

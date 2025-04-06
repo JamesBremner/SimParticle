@@ -93,11 +93,9 @@ particle *particle::factory(
     return newParticle;
 }
 
-void particle::setGridSize(
-    int rowCount,
-    int colCount)
+void particle::setGridSize()
 {
-    theGrid.resize(rowCount, std::vector<particle *>(colCount));
+    theGrid.resize(GRID_ROW_COUNT, std::vector<particle *>(GRID_COL_COUNT));
     myGrid2WindowScale = (double)GRID_PXL_WIDTH / GRID_COL_COUNT;
 }
 
@@ -450,8 +448,9 @@ void water::move()
     }
 
     // found a spot
-    theGrid[LROW][LCOL + flowDistance] = this;
+    theGrid[LROW+1][LCOL + flowDistance] = this;
     theGrid[LROW][LCOL] = NULL;
+    LROW++;
     LCOL += flowDistance;
     setMoveFlags();
     // std::cout << "distance " << flowDistance
