@@ -41,7 +41,12 @@ void cGUI::registerEventHandlers()
             if (particle::moveAll())
             {
                 // a particle moved
-                fm.update();
+
+                static int count = 0;
+                if( count++ > 5 ) {
+                    fm.update();
+                    count = 0;
+                }
             }
         });
 

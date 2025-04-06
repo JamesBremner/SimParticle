@@ -145,25 +145,28 @@ void particle::moveDown()
     theGrid[LROW + 1][LCOL] = this;
     LROW++;
     setMoveFlags();
+    freeGrainsAbove();
     // std::cout << " > " << LROW << " " << LCOL << "\n";
 }
 void particle::moveLeft()
 {
-    std::cout << "left " << LROW << " " << LCOL;
+    // std::cout << "left " << LROW << " " << LCOL;
     theGrid[LROW][LCOL] = NULL;
     theGrid[LROW][LCOL - 1] = this;
     LCOL--;
     setMoveFlags();
-    std::cout << " > " << LROW << " " << LCOL << "\n";
+    freeGrainsAbove();
+    // std::cout << " > " << LROW << " " << LCOL << "\n";
 }
 void particle::moveRight()
 {
-    std::cout << "right " << LROW << " " << LCOL;
+    // std::cout << "right " << LROW << " " << LCOL;
     theGrid[LROW][LCOL] = NULL;
     theGrid[LROW][LCOL + 1] = this;
     LCOL++;
     setMoveFlags();
-    std::cout << " > " << LROW << " " << LCOL << "\n";
+    freeGrainsAbove();
+    // std::cout << " > " << LROW << " " << LCOL << "\n";
 }
 
 void particle::freeGrainsAbove()
@@ -256,6 +259,7 @@ void grain::move()
     if (isAtRest())
         return;
 
+    // skip if already moved in this update ( prevent 'teleporting')
     if (myfMoveThis)
         return;
 
@@ -268,8 +272,6 @@ void grain::move()
     }
 
     // check if cell below is empty so grain can fall straight down
-    auto prevLocation = myLocation;
-    bool fMoved = false;
     if (theGrid[LROW + 1][LCOL] == NULL)
     {
         moveDown();
@@ -278,22 +280,22 @@ void grain::move()
 
     // check if cell below contains water,
     // so grain will continue sinking through water
-    if( dynamic_cast<water *>(theGrid[LROW + 1][LCOL]) )
+    if (dynamic_cast<water *>(theGrid[LROW + 1][LCOL]))
     {
+        auto prevLocation = myLocation;
         moveDown();
 
-        if( myfReplacedWater )
+        if (myfReplacedWater)
         {
             // sinking through water
             // so replace water that was displaced
-            auto w = new water(prevLocation.first,prevLocation.second);
+            auto w = new water(prevLocation.first, prevLocation.second);
             w->setAtRest();
             theGrid[prevLocation.first][prevLocation.second] = w;
         }
 
         // remember to replace the water
         myfReplacedWater = true;
-
         return;
     }
 
@@ -306,42 +308,22 @@ void grain::move()
         // move right
 
         moveRight();
-        fMoved = true;
+        return;
     }
-    else if (
+
+    if (
         LCOL - 1 >= 0 &&
         theGrid[LROW][LCOL - 1] == NULL &&
         theGrid[LROW + 1][LCOL - 1] == NULL)
     {
         // cells on left and down left are available
         // move left
-
         moveLeft();
-        fMoved = true;
+        return;
     }
 
-    if (fMoved)
-    {
-        // if( theGrid[prevLocation.second][prevLocation.first] != NULL )
-        //     std::cout << prevLocation.first <<" "<< prevLocation.second << " occupied ";
-        // else
-        // std::cout << prevLocation.first <<" "<< prevLocation.second << "free ";
-
-        // free grains that may have been blocked;
-        freeGrainsAbove();
-
-        // need a display update
-        myfMove = true;
-
-        myfMoveThis = true;
-
-        // std::cout << " moved " << text() << " ";
-    }
-    else
-    {
-        // grain is blocked
-        setAtRest();
-    }
+    // grain is blocked
+    setAtRest();
 }
 
 std::string grain::text() const

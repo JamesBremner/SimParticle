@@ -2,7 +2,7 @@
 #include <wex.h>
 
 // "magic numbers"
-#define msStep 20 // update wall clock step milliseconds ( 10 = 100 fps )
+#define msStep 10 // update wall clock step milliseconds ( 10 = 100 fps )
 #define GRID_ROW_COUNT 200
 #define GRID_COL_COUNT 500
 //   #define GRID_ROW_COUNT 40
