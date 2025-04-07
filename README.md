@@ -7,22 +7,7 @@ Particles are created at the mouse cursor position when the left mouse button is
 
 Sand grains will display yellow, water will be blue and stones will be black.
 
-To demo how the different move algorithms are called for each particle type: 
- - grains move down and pile up on the bottom with a slope of 45 degrees
+![Screenshot 2025-04-07 101946](https://github.com/user-attachments/assets/631115c4-3c50-46f4-9121-ec5d2752c0c3)
 
 
-https://github.com/user-attachments/assets/3f22564b-be63-4f8d-880a-45c778605309
-
-  
- - water flows to find its own level
-
-
-https://github.com/user-attachments/assets/f4a02559-2fa3-4b9d-93ee-1db3ba0800c5
-
-
- - grains are a barrier to water, so water forms a pool between two sand piles.  If sand falls into a pool of water, it sinks to the bottom
-
-
-https://github.com/user-attachments/assets/b74c6e5f-c3db-416c-a04a-12c0be5a06e7
-
-
+https://github.com/user-attachments/assets/550503c7-200c-40fd-8bf9-ffecdceb517f
