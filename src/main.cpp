@@ -56,8 +56,8 @@ particle *particle::factory(
 
     // check within bounds
     // note cannot use isOutGrid method because this method is static
-    if (0 > row || row >= theGrid[0].size() ||
-        0 > col || col >= theGrid.size())
+    if (0 > row || row >= GRID_ROW_COUNT ||
+        0 > col || col >= GRID_COL_COUNT)
         return NULL;
 
     // check location is empty

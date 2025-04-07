@@ -3,7 +3,7 @@
 
 // "magic numbers"
 
-#define msStep 10   // move update wall clock step milliseconds ( 10 = 100 fps )
+#define msStep 1   // move update wall clock step milliseconds ( 10 = 100 fps )
 #define DSP_SPEED 5  // number moves between display udates
 
 #define GRID_COL_COUNT 500
