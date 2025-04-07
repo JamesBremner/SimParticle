@@ -15,5 +15,6 @@ private:
 
     int myKeyDown;
 
+    void constructMenu();
     void registerEventHandlers();
 };

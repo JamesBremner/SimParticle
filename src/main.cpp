@@ -95,6 +95,7 @@ particle *particle::factory(
 
 void particle::setGridSize()
 {
+    theGrid.clear();
     theGrid.resize(GRID_ROW_COUNT, std::vector<particle *>(GRID_COL_COUNT));
     myGrid2WindowScale = (double)GRID_PXL_WIDTH / GRID_COL_COUNT;
 }
