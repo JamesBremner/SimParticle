@@ -4,7 +4,7 @@
 // "magic numbers"
 
 #define msStep 1   // move update wall clock step milliseconds ( 10 = 100 fps )
-#define DSP_SPEED 5  // number moves between display udates
+#define DSP_SPEED 5  // number moves between display updates
 
 #define GRID_COL_COUNT 500
 #define GRID_ROW_COUNT 200
@@ -89,15 +89,16 @@ protected:
     static double myGrid2WindowScale;
     static bool myfMove; // true if any of the particles moved
 
-    // store the particles in their grid locations
+    // store the particle pointers in their grid locations
     static grid_t theGrid;
 
-    /* Clear the fAtRest flags for any particles above
+    // store particle pointers in a vector
+    // Saves checking empty grid locations
+    static std::vector<particle*> theParticleVector;
+
+    /* When particle has moved clear the fAtRest flags for any particles above
 
     When a particle moves it will free particles above that were blocked
-
-    This only works properly if the grid is scanned from bottom to top
-    https://github.com/JamesBremner/SimParticle/issues/1#issuecomment-2781424962
 
     */
     void freeGrainsAbove();

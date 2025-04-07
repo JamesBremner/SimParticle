@@ -39,6 +39,8 @@ void cGUI::constructMenu()
                 exit(1);
             }
             wex::msgbox( "All unit tests passed" );
+            particle::setGridSize();
+            fm.update();
         });
 
     mbar.append("Run", file);

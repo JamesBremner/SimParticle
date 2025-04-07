@@ -13,6 +13,7 @@
 
 // storage for particle static attributes
 grid_t particle::theGrid;
+std::vector<particle *> particle::theParticleVector;
 double particle::myGrid2WindowScale;
 bool particle::myfMove;
 
@@ -27,6 +28,7 @@ particle::particle(int color, int row, int col)
       myfReplacedWater(false)
 {
     theGrid[row][col] = this;
+    theParticleVector.push_back(this);
     // std::cout << "created at "<< LROW <<" "<< LCOL <<" "<< row <<" "<< col << "\n";
 }
 particle *particle::factory(
@@ -96,6 +98,12 @@ particle *particle::factory(
 void particle::setGridSize()
 {
     theGrid.clear();
+    for (auto *p : theParticleVector)
+    {
+        delete p;
+    }
+    theParticleVector.clear();
+
     theGrid.resize(GRID_ROW_COUNT, std::vector<particle *>(GRID_COL_COUNT));
     myGrid2WindowScale = (double)GRID_PXL_WIDTH / GRID_COL_COUNT;
 }
@@ -144,7 +152,6 @@ void particle::moveDown()
     theGrid[LROW + 1][LCOL] = this;
     LROW++;
     setMoveFlags();
-    freeGrainsAbove();
     // std::cout << " > " << LROW << " " << LCOL << "\n";
 }
 void particle::moveLeft()
@@ -154,7 +161,6 @@ void particle::moveLeft()
     theGrid[LROW][LCOL - 1] = this;
     LCOL--;
     setMoveFlags();
-    freeGrainsAbove();
     // std::cout << " > " << LROW << " " << LCOL << "\n";
 }
 void particle::moveRight()
@@ -164,12 +170,15 @@ void particle::moveRight()
     theGrid[LROW][LCOL + 1] = this;
     LCOL++;
     setMoveFlags();
-    freeGrainsAbove();
     // std::cout << " > " << LROW << " " << LCOL << "\n";
 }
 
 void particle::freeGrainsAbove()
 {
+    // skip if not moved
+    if (fAtRest)
+        return;
+
     // ensure grain above, if present, is free
     auto n = get(LROW - 1, LCOL);
     if (n != nullptr)
@@ -213,34 +222,23 @@ void particle::draw(wex::shapes &S) const
 
 void particle::drawAll(wex::shapes &S)
 {
-    // loop over grid
-    for (auto &row : theGrid)
-        for (particle *p : row)
-        {
-            // if particle present, draw it
-            if (p)
-            {
-                p->draw(S);
-            }
-        }
+    // loop over particles
+    for (particle *p : theParticleVector)
+        p->draw(S);
 }
 
 bool particle::moveAll()
 {
     particle::clearMoveFlags();
 
-    /* loop over grid
+    /* loop over particles, moving any that can
+     */
+    for (particle *p : theParticleVector)
+        p->move();
 
-    The grid must be scanned upwards to prevent precipes forming
-    https://github.com/JamesBremner/SimParticle/issues/1#issuecomment-2781424962
-    */
-    for (int krow = theGrid.size() - 1; krow >= 0; krow--)
-        for (particle *p : theGrid[krow])
-        {
-            // if particle present, move it
-            if (p)
-                p->move();
-        }
+    // 2nd pass to free greens liberated by a move
+    for (particle *p : theParticleVector)
+        p->freeGrainsAbove();
 
     return myfMove;
 }
@@ -365,7 +363,7 @@ void water::move()
 
     // calculate distance pool has spread out
     int distance = flowDistance();
-    if ( fAtRest )
+    if (fAtRest)
     {
         // blocked
         return;
@@ -377,7 +375,6 @@ void water::move()
     LROW++;
     LCOL += distance;
     setMoveFlags();
-
 }
 
 int water::flowDistance()
@@ -392,7 +389,8 @@ int water::flowDistance()
         // std::cout << (int)flowLeft << " " << (int)flowRight << " " << flowDistance << " > ";
 
         // check for blocked on both sides
-        if ((!flowLeft) && (!flowRight)) {
+        if ((!flowLeft) && (!flowRight))
+        {
             fAtRest = true;
             return INT_MAX;
         }
