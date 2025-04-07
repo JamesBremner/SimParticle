@@ -11,3 +11,5 @@ Sand grains will display yellow, water will be blue and stones will be black.
 
 
 https://github.com/user-attachments/assets/550503c7-200c-40fd-8bf9-ffecdceb517f
+
+[Build Instructions](https://github.com/JamesBremner/SimParticle/wiki/Build-Instructions)
