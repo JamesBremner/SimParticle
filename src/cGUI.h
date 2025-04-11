@@ -14,6 +14,7 @@ private:
     wex::timer *myUpdateTimer;
 
     int myKeyDown;
+    bool myfSlowSim;
 
     void constructMenu();
     void registerEventHandlers();

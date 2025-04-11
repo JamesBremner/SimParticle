@@ -2,7 +2,8 @@
 #include "SimParticle.h"
 
 cGUI::cGUI()
-    : fm(wex::maker::make())
+    : fm(wex::maker::make()),
+    myfSlowSim( false )
 {
     fm.move({50, 50, GRID_PXL_WIDTH, GRID_PXL_HEIGHT + 100});
     fm.text("Raven's Particle Simulator");
@@ -23,9 +24,18 @@ void cGUI::constructMenu()
 
     wex::menu file(fm);
     file.append(
-        "Restart Simulation",
+        "Restart Fast Simulation",
         [&](const std::string &title)
         {
+            myfSlowSim = false;
+            particle::setGridSize();
+            fm.update();
+        });
+    file.append(
+        "Restart Slow Simulation",
+        [&](const std::string &title)
+        {
+            myfSlowSim = true;
             particle::setGridSize();
             fm.update();
         });
@@ -85,6 +95,23 @@ void cGUI::registerEventHandlers()
     fm.events().timer(
         [this](int id)
         {
+            if( myfSlowSim ) {
+
+                // slow simulation requested
+
+                // on left mouse button down create new particle
+                particle::factory(fm.getMouseStatus(), myKeyDown);
+
+                // move all free particles one cell
+                particle::moveAll();
+
+                // refresh display
+                fm.update();
+
+                // return to waiting
+                return;
+            }
+
             // true when there is new particle not displayed
             bool fNewParticle = false;
 
@@ -98,6 +125,7 @@ void cGUI::registerEventHandlers()
                 fNewParticle = true;
 
                 // update position of all particles free to move
+                // untill all have finally come to rest
                 while (particle::moveAll())
                 {
                     // a particle moved

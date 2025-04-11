@@ -4,7 +4,7 @@
 // "magic numbers"
 
 // specify number of particles generated between display refreshes
-#define PARTS_DISPLAY 50  
+#define PARTS_DISPLAY 50 
 
 // specify grid resolution
 #define GRID_COL_COUNT 500
