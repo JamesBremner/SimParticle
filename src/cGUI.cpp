@@ -24,7 +24,7 @@ void cGUI::constructMenu()
 
     wex::menu file(fm);
     file.append(
-        "Restart Fast Simulation",
+        "Restart Fast",
         [&](const std::string &title)
         {
             myfSlowSim = false;
@@ -32,7 +32,7 @@ void cGUI::constructMenu()
             fm.update();
         });
     file.append(
-        "Restart Slow Simulation",
+        "Restart Slow",
         [&](const std::string &title)
         {
             myfSlowSim = true;
@@ -65,7 +65,8 @@ void cGUI::constructMenu()
                 "w key to enable water droplet generation\n"
                 "Click left mouse button to generate sand or water particles\n\n"
                 "Menus:\n\n"
-                "File | Restart Simulation\n"
+                "File | Restart Fast. Restart and run fast simulation. Fast is default\n"
+                "File | Restart Slow. Restart and run slow simulation\n"
                 "File | Run unit tests.  Msg on success, Msg and exit on failure\n\n"
                 "Help | Usage. This message\n"
                 "Help | About. Credits\n");
