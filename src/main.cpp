@@ -236,7 +236,7 @@ bool particle::moveAll()
     for (particle *p : theParticleVector)
         p->move();
 
-    // 2nd pass to free greens liberated by a move
+    // 2nd pass to free grains liberated by a move
     for (particle *p : theParticleVector)
         p->freeGrainsAbove();
 

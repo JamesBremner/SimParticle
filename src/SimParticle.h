@@ -3,11 +3,14 @@
 
 // "magic numbers"
 
-#define msStep 1   // move update wall clock step milliseconds ( 10 = 100 fps )
-#define DSP_SPEED 5  // number moves between display updates
+// specify number of particles generated between display refreshes
+#define PARTS_DISPLAY 50  
 
+// specify grid resolution
 #define GRID_COL_COUNT 500
 #define GRID_ROW_COUNT 200
+
+// specify window size
 
 #define GRID_PXL_WIDTH 1000
 #define GRID_PXL_HEIGHT 400
